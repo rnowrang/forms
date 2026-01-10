@@ -1,0 +1,27 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies including LibreOffice for PDF conversion
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    libreoffice \
+    libreoffice-writer \
+    fonts-liberation \
+    fonts-dejavu \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Create storage directories
+RUN mkdir -p /app/storage/uploads /app/storage/generated /app/storage/templates
+
+# Copy application code
+COPY . .
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
