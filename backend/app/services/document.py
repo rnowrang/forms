@@ -12,6 +12,7 @@ from fastapi import HTTPException, status
 from docx import Document
 from docx.table import Table
 from docx.text.paragraph import Paragraph
+from docx.shared import RGBColor
 
 from app.config import get_settings
 from app.models.template import Template
@@ -22,7 +23,23 @@ settings = get_settings()
 
 class DocumentService:
     """Service for generating filled DOCX and PDF documents."""
-    
+
+    @staticmethod
+    def _flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
+        """
+        Flatten a nested dictionary to dot-notation keys.
+
+        Example: {'personnel': {'pi_name': 'John'}} -> {'personnel.pi_name': 'John'}
+        """
+        items = []
+        for k, v in d.items():
+            new_key = f"{parent_key}{sep}{k}" if parent_key else k
+            if isinstance(v, dict):
+                items.extend(DocumentService._flatten_dict(v, new_key, sep).items())
+            else:
+                items.append((new_key, v))
+        return dict(items)
+
     @staticmethod
     def generate_documents(
         db: Session,
@@ -109,30 +126,153 @@ class DocumentService:
         # Open and fill document
         doc = Document(output_path)
         fields = schema.get("fields", [])
-        
+
         # Build field lookup by ID
         field_map = {f["id"]: f for f in fields}
-        
+
+        # Flatten nested data to dot-notation keys (e.g., personnel.pi_name)
+        flat_data = DocumentService._flatten_dict(data)
+
+        # Handle Section C contact fields specially (row 9 is fully merged)
+        # Combine contact_name, contact_ext, contact_email into one value
+        contact_fields = ['personnel.contact_name', 'personnel.contact_ext', 'personnel.contact_email']
+        contact_values = {f: flat_data.get(f, '') for f in contact_fields}
+        if any(contact_values.values()):
+            # Format: "Name | Ext: xxx | Email: xxx"
+            parts = []
+            if contact_values['personnel.contact_name']:
+                parts.append(str(contact_values['personnel.contact_name']))
+            if contact_values['personnel.contact_ext']:
+                parts.append(f"Ext: {contact_values['personnel.contact_ext']}")
+            if contact_values['personnel.contact_email']:
+                parts.append(f"Email: {contact_values['personnel.contact_email']}")
+            combined_contact = " | ".join(parts)
+
+            # Write to the merged row 9 cell
+            if len(doc.tables) > 1:
+                table = doc.tables[1]
+                if len(table.rows) > 9:
+                    cell = table.rows[9].cells[0]
+                    if cell.paragraphs:
+                        para = cell.paragraphs[0]
+                        para.clear()
+                        para.add_run(combined_contact)
+                    else:
+                        cell.text = combined_contact
+
         # Fill each field
-        for field_id, value in data.items():
+        for field_id, value in flat_data.items():
+            # Skip contact fields as they were handled above
+            if field_id in contact_fields:
+                continue
             if field_id.startswith("_"):
                 continue  # Skip system fields
-            
+
             field_def = field_map.get(field_id)
             if not field_def:
                 continue
-            
+
+            field_type = field_def.get("type", "text")
+
+            # Handle checkbox fields specially
+            if field_type == "checkbox" and isinstance(value, list):
+                DocumentService._fill_checkbox_field(doc, value, field_def)
+                continue
+
             anchor = field_def.get("anchor")
             if not anchor:
                 continue
-            
+
             DocumentService._write_value_to_anchor(doc, anchor, value, field_def)
-        
+
+        # Fix header table borders for LibreOffice compatibility
+        # Table 0 Cell 0 (logo) should have no visible borders
+        DocumentService._fix_header_table_borders(doc)
+
         # Save the filled document
         doc.save(output_path)
         
         return output_path
-    
+
+    @staticmethod
+    def _fix_header_table_borders(doc: Document) -> None:
+        """
+        Fix header table (Table 0) borders for LibreOffice compatibility.
+        Cell 0 (logo area) should have no visible borders.
+        """
+        from docx.oxml.ns import qn
+        from docx.oxml import OxmlElement
+
+        if len(doc.tables) == 0:
+            return
+
+        table = doc.tables[0]
+        if len(table.rows) == 0:
+            return
+
+        # Fix Cell 0 (logo cell) - remove all borders
+        cell = table.rows[0].cells[0]
+        tc = cell._tc
+        tc_pr = tc.get_or_add_tcPr()
+
+        # Remove existing borders
+        existing_borders = tc_pr.find(qn('w:tcBorders'))
+        if existing_borders is not None:
+            tc_pr.remove(existing_borders)
+
+        # Add new borders element with all sides set to nil
+        tc_borders = OxmlElement('w:tcBorders')
+        for border_name in ['top', 'left', 'bottom', 'right']:
+            border = OxmlElement(f'w:{border_name}')
+            border.set(qn('w:val'), 'nil')
+            tc_borders.append(border)
+        tc_pr.append(tc_borders)
+
+    @staticmethod
+    def _fill_checkbox_field(
+        doc: Document,
+        selected_values: list,
+        field_def: Dict[str, Any]
+    ) -> None:
+        """Fill checkbox fields by updating form field checkboxes or adding visual markers."""
+        from docx.oxml.ns import qn
+
+        options = field_def.get("options", [])
+
+        # Build a map of option values to their labels
+        option_labels = {opt.get("value"): opt.get("label", opt.get("value")) for opt in options}
+
+        # Find paragraphs containing checkbox options and update them
+        for para in doc.paragraphs:
+            para_text = para.text.strip()
+
+            # Check each option
+            for opt_value, opt_label in option_labels.items():
+                # Check if this paragraph contains this option's label
+                if opt_label.lower() in para_text.lower():
+                    is_selected = opt_value in selected_values
+
+                    # Try to find and update form field checkboxes
+                    for run in para.runs:
+                        run_xml = run._r.xml
+                        if 'fldChar' in run_xml or 'checkBox' in run_xml.lower():
+                            # Found a form field - try to update it
+                            for elem in run._r.iter():
+                                # Look for checkbox default value
+                                if elem.tag.endswith('default') or elem.tag.endswith('checked'):
+                                    elem.set(qn('w:val'), '1' if is_selected else '0')
+
+                    # Also try to find and replace checkbox symbols
+                    # Common unchecked: ☐ (U+2610), □ (U+25A1)
+                    # Common checked: ☑ (U+2611), ☒ (U+2612), ■ (U+25A0)
+                    for run in para.runs:
+                        if '☐' in run.text:
+                            run.text = run.text.replace('☐', '☑' if is_selected else '☐')
+                        elif '□' in run.text:
+                            run.text = run.text.replace('□', '■' if is_selected else '□')
+
+                    break  # Found the option, move to next
+
     @staticmethod
     def _write_value_to_anchor(
         doc: Document,
@@ -191,34 +331,57 @@ class DocumentService:
         else:
             formatted_value = str(value) if value else ""
         
-        # Find placeholder pattern (underscores or empty after colon)
-        # Pattern: label followed by underscores or blank space
+        # Find placeholder pattern (underscores, colon, question mark, or append)
         patterns = [
             (r'(_+)', formatted_value),  # Replace underscores
             (r'(:\s*)$', f': {formatted_value}'),  # Append after colon at end
+            (r'(\?\s*)$', f'? {formatted_value}'),  # Append after question mark at end
         ]
-        
+
+        matched = False
+        new_text = text
         for pattern, replacement in patterns:
             if re.search(pattern, text):
                 new_text = re.sub(pattern, replacement, text, count=1)
-                
-                # Clear existing runs and add new text
-                # Preserve the formatting of the first run
-                if para.runs:
-                    first_run = para.runs[0]
-                    font_name = first_run.font.name
-                    font_size = first_run.font.size
-                    font_bold = first_run.font.bold
-                    
-                    # Clear paragraph
-                    for run in para.runs:
-                        run.text = ""
-                    
-                    # Add new text with original formatting
-                    para.runs[0].text = new_text
-                else:
-                    para.text = new_text
-                return
+                matched = True
+                break
+
+        # If no pattern matched, append the value at the end
+        if not matched and formatted_value:
+            new_text = f"{text.rstrip()} {formatted_value}"
+
+        # Split text to separate original label from the filled value
+        # so we can make only the value bold
+        if matched:
+            # Find where the value was inserted
+            for pattern, replacement in patterns:
+                match = re.search(pattern, text)
+                if match:
+                    prefix = text[:match.start()]
+                    suffix = text[match.end():]
+                    break
+            else:
+                prefix = text
+                suffix = ""
+
+            # Clear paragraph and add runs with formatting
+            para.clear()
+            if prefix:
+                # Add space before value if prefix doesn't end with space
+                if not prefix.endswith(' '):
+                    prefix = prefix + ' '
+                para.add_run(prefix)
+            value_run = para.add_run(formatted_value)
+            value_run.underline = True
+            if suffix:
+                para.add_run(suffix)
+        else:
+            # For appended values
+            para.clear()
+            para.add_run(text.rstrip() + "  ")  # Two spaces before value
+            value_run = para.add_run(formatted_value)
+            value_run.underline = True
+        return
     
     @staticmethod
     def _fill_table_cell_anchor(
@@ -253,16 +416,11 @@ class DocumentService:
         else:
             formatted_value = str(value) if value else ""
         
-        # Set cell text while preserving formatting
+        # Set cell text
         if cell.paragraphs:
             para = cell.paragraphs[0]
-            # Preserve formatting from existing text
-            if para.runs:
-                for run in para.runs[1:]:
-                    run.text = ""
-                para.runs[0].text = formatted_value
-            else:
-                para.text = formatted_value
+            para.clear()
+            para.add_run(formatted_value)
         else:
             cell.text = formatted_value
     
@@ -276,34 +434,48 @@ class DocumentService:
         """Fill a repeatable table-anchored field."""
         if not isinstance(value, list):
             return
-        
+
         table_index = anchor.get("table_index", 0)
-        
+        start_row = anchor.get("start_row", 1)  # Default to row 1 if not specified
+
         if table_index >= len(doc.tables):
             return
-        
+
         table = doc.tables[table_index]
         repeatable_config = field_def.get("repeatable_config", {})
         columns = repeatable_config.get("columns", [])
-        
-        # Fill data rows (skip header row)
+
+        # Get column mapping - accounts for merged cells
+        # Map logical column index to actual cell index
+        column_mapping = repeatable_config.get("column_mapping", None)
+
+        # Fill data rows starting from start_row
         for row_idx, row_data in enumerate(value):
-            if row_idx + 1 >= len(table.rows):
+            actual_row_idx = start_row + row_idx
+            if actual_row_idx >= len(table.rows):
                 # Need to add new row
                 table.add_row()
-            
-            row = table.rows[row_idx + 1]
-            
+
+            row = table.rows[actual_row_idx]
+
             for col_idx, col_def in enumerate(columns):
-                if col_idx >= len(row.cells):
+                # Use column_mapping if provided, otherwise use col_idx
+                if column_mapping and col_idx < len(column_mapping):
+                    actual_col_idx = column_mapping[col_idx]
+                else:
+                    actual_col_idx = col_idx
+
+                if actual_col_idx >= len(row.cells):
                     continue
-                
-                cell = row.cells[col_idx]
+
+                cell = row.cells[actual_col_idx]
                 col_id = col_def.get("id", f"col_{col_idx}")
                 cell_value = row_data.get(col_id, "") if isinstance(row_data, dict) else ""
-                
+
                 if cell.paragraphs:
-                    cell.paragraphs[0].text = str(cell_value)
+                    para = cell.paragraphs[0]
+                    para.clear()
+                    para.add_run(str(cell_value))
                 else:
                     cell.text = str(cell_value)
     
