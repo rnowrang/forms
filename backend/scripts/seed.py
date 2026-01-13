@@ -408,20 +408,20 @@ def seed_database():
         # Create sample template
         print("\nCreating templates...")
         
-        template = db.query(Template).filter(Template.name == "Minimal Risk IRB Application").first()
+        template = db.query(Template).filter(Template.name == "IRB Application for Anonymous Surveys").first()
         if not template:
             template = Template(
-                name="Minimal Risk IRB Application",
-                description="Application for research involving minimal risk to participants. Use this form for surveys, interviews, and observational studies.",
+                name="IRB Application for Anonymous Surveys",
+                description="Application for research involving anonymous surveys. Use this form for anonymous survey-based studies.",
                 version="1.0",
-                original_file_path="/app/storage/templates/minimal_risk_template.docx",
-                original_file_name="irb-application-minimal-risk.docx",
+                original_file_path="/app/storage/templates/IRB application for anonymous survey 9.9.25_0.docx",
+                original_file_name="IRB application for anonymous survey 9.9.25_0.docx",
                 schema=MINIMAL_RISK_SCHEMA,
                 is_active=True,
                 is_published=True,
             )
             db.add(template)
-            print("  Created template: Minimal Risk IRB Application")
+            print("  Created template: IRB Application for Anonymous Surveys")
         
         db.commit()
         

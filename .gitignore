@@ -65,7 +65,12 @@ frontend/build/
 
 # Uploaded files (for dev)
 uploads/
-storage/
+# storage directories (but not backend/storage/templates which has template files)
+/storage/
+frontend/storage/
+!backend/storage/
+backend/storage/uploads/
+backend/storage/generated/
 
 # Generated documents
 generated/
