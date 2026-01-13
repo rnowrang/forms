@@ -26,6 +26,10 @@ RUN mkdir -p /app/storage/uploads /app/storage/generated /app/storage/templates 
 # Copy application code
 COPY --chown=appuser:appuser . .
 
+# Copy templates to a source directory (disk mount will override /app/storage)
+RUN mkdir -p /app/templates_source && \
+    cp -r storage/templates/* /app/templates_source/ 2>/dev/null || true
+
 # Make start script executable
 RUN chmod +x start.sh
 
