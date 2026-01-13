@@ -31,7 +31,8 @@ async def submit_for_review(
 ):
     """Submit a form for review."""
     form = ReviewService.submit_for_review(db, form_id, current_user, notes)
-    return {"message": "Form submitted for review", "status": form.status.value}
+    status = form.status.value if hasattr(form.status, 'value') else form.status
+    return {"message": "Form submitted for review", "status": status}
 
 
 @router.post("/form/{form_id}/request-changes")
@@ -43,7 +44,8 @@ async def request_changes(
 ):
     """Request changes on a submitted form (reviewer only)."""
     form = ReviewService.request_changes(db, form_id, current_user, action.notes)
-    return {"message": "Changes requested", "status": form.status.value}
+    status = form.status.value if hasattr(form.status, 'value') else form.status
+    return {"message": "Changes requested", "status": status}
 
 
 @router.post("/form/{form_id}/approve")
@@ -56,7 +58,8 @@ async def approve_form(
     """Approve a form (reviewer only)."""
     notes = action.notes if action else None
     form = ReviewService.approve_form(db, form_id, current_user, notes)
-    return {"message": "Form approved", "status": form.status.value}
+    status = form.status.value if hasattr(form.status, 'value') else form.status
+    return {"message": "Form approved", "status": status}
 
 
 @router.post("/form/{form_id}/return-to-draft")
@@ -68,7 +71,8 @@ async def return_to_draft(
 ):
     """Return a form to draft status."""
     form = ReviewService.return_to_draft(db, form_id, current_user, notes)
-    return {"message": "Form returned to draft", "status": form.status.value}
+    status = form.status.value if hasattr(form.status, 'value') else form.status
+    return {"message": "Form returned to draft", "status": status}
 
 
 # Comments

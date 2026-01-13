@@ -48,7 +48,7 @@ class FormInstance(Base):
     # Form metadata
     title: Mapped[str] = mapped_column(String(512), nullable=False)
     status: Mapped[FormStatus] = mapped_column(
-        Enum(FormStatus), 
+        Enum('draft', 'in_review', 'needs_changes', 'approved', 'locked', name='formstatus', create_type=False),
         default=FormStatus.DRAFT,
         nullable=False,
         index=True
@@ -122,7 +122,7 @@ class FormVersion(Base):
     
     # Status when this version was created
     status_at_creation: Mapped[FormStatus] = mapped_column(
-        Enum(FormStatus),
+        Enum('draft', 'in_review', 'needs_changes', 'approved', 'locked', name='formstatus', create_type=False),
         nullable=False
     )
     

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm, Controller, useWatch } from 'react-hook-form'
 import toast from 'react-hot-toast'
 import debounce from 'lodash.debounce'
 import {
@@ -40,11 +40,11 @@ export default function FormEditorPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['sec_I']))
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['sec_personnel', 'sec_study_info', 'sec_study_summary']))
   const [isSaving, setIsSaving] = useState(false)
   const [showVersionModal, setShowVersionModal] = useState(false)
   const [versionLabel, setVersionLabel] = useState('')
-  const [hiddenFields, setHiddenFields] = useState<Set<string>>(new Set())
+  // hiddenFields is now computed via useMemo as hiddenFieldsComputed
 
   // Fetch form data
   const { data: form, isLoading: formLoading } = useQuery({
@@ -74,21 +74,45 @@ export default function FormEditorPage() {
     }
   }, [form?.data, setValue])
 
-  // Watch all form values for conditional logic
-  const formValues = watch()
+  // Watch all form values - useWatch triggers re-render on changes
+  const watchedValues = useWatch({ control })
 
-  // Evaluate conditional rules
-  useEffect(() => {
-    if (!template?.schema?.rules) return
+  // Helper to get nested value by dot-notation path (e.g., "personnel.has_alt_contact")
+  const getNestedValue = (obj: any, path: string): any => {
+    return path.split('.').reduce((curr, key) => curr?.[key], obj)
+  }
+
+  // Evaluate conditional rules - computed on every render
+  const computeHiddenFields = (): Set<string> => {
+    if (!template?.schema) return new Set<string>()
 
     const newHidden = new Set<string>()
-    
+
+    // First, hide fields that have visible: false by default
+    const schemaFields = template.schema.fields || []
+    schemaFields.forEach((field: any) => {
+      if (field.visible === false) {
+        newHidden.add(field.id)
+      }
+    })
+
+    // Then evaluate rules (which can show hidden fields)
+    if (!template.schema.rules) {
+      return newHidden
+    }
+
     template.schema.rules.forEach((rule: any) => {
       let conditionsMet = true
-      
+
       for (const condition of rule.conditions || []) {
-        const fieldValue = formValues[condition.field]
-        
+        // Use getNestedValue to properly access dot-notation paths like "personnel.has_alt_contact"
+        const fieldValue = getNestedValue(watchedValues, condition.field)
+
+        // Debug specific rules
+        if (rule.id === 'rule_alt_contact' || rule.id === 'rule_funding_intramural') {
+          console.log(`Rule ${rule.id}: field=${condition.field}, value=${fieldValue}, expected=${condition.value}`)
+        }
+
         switch (condition.operator) {
           case 'equals':
             conditionsMet = conditionsMet && fieldValue === condition.value
@@ -109,24 +133,27 @@ export default function FormEditorPage() {
             conditionsMet = conditionsMet && (!fieldValue || fieldValue === '' || (Array.isArray(fieldValue) && fieldValue.length === 0))
             break
           case 'is_not_empty':
+          case 'not_empty':
             conditionsMet = conditionsMet && fieldValue && fieldValue !== '' && (!Array.isArray(fieldValue) || fieldValue.length > 0)
             break
         }
       }
 
       const actions = conditionsMet ? rule.then_actions : rule.else_actions
-      
+
       actions?.forEach((action: any) => {
         if (action.action === 'hide') {
           newHidden.add(action.field)
-        } else if (action.action === 'clear' && conditionsMet === false) {
-          setValue(action.field, undefined)
+        } else if (action.action === 'show') {
+          newHidden.delete(action.field)
         }
       })
     })
 
-    setHiddenFields(newHidden)
-  }, [formValues, template?.schema?.rules, setValue])
+    return newHidden
+  }
+
+  const hiddenFieldsComputed = computeHiddenFields()
 
   // Autosave mutation
   const saveMutation = useMutation({
@@ -238,7 +265,7 @@ export default function FormEditorPage() {
 
   const getFieldsForSection = (sectionId: string) =>
     fields
-      .filter((f: TemplateSchemaField) => f.section_id === sectionId && !hiddenFields.has(f.id))
+      .filter((f: TemplateSchemaField) => f.section_id === sectionId && !hiddenFieldsComputed.has(f.id))
       .sort((a: any, b: any) => (a.order || 0) - (b.order || 0))
 
   return (
@@ -542,6 +569,106 @@ function FormField({
           />
         )
       
+      case 'repeatable':
+        return (
+          <Controller
+            name={field.id}
+            control={control}
+            render={({ field: { value, onChange: formOnChange } }) => {
+              const rows = Array.isArray(value) ? value : []
+              const config = field.repeatable_config || { columns: [], max_rows: 10 }
+
+              const addRow = () => {
+                if (rows.length < (config.max_rows || 10)) {
+                  const newRow: Record<string, string> = {}
+                  config.columns.forEach((col: any) => {
+                    newRow[col.id] = ''
+                  })
+                  const newRows = [...rows, newRow]
+                  formOnChange(newRows)
+                  onChange(newRows)
+                }
+              }
+
+              const removeRow = (index: number) => {
+                const newRows = rows.filter((_: any, i: number) => i !== index)
+                formOnChange(newRows)
+                onChange(newRows)
+              }
+
+              const updateCell = (rowIndex: number, colId: string, cellValue: string) => {
+                const newRows = rows.map((row: any, i: number) =>
+                  i === rowIndex ? { ...row, [colId]: cellValue } : row
+                )
+                formOnChange(newRows)
+                onChange(newRows)
+              }
+
+              return (
+                <div className="space-y-3">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="bg-surface-50">
+                          {config.columns.map((col: any) => (
+                            <th key={col.id} className="px-3 py-2 text-left text-sm font-medium text-surface-700 border border-surface-200">
+                              {col.label}
+                            </th>
+                          ))}
+                          <th className="px-3 py-2 w-10 border border-surface-200"></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((row: any, rowIndex: number) => (
+                          <tr key={rowIndex}>
+                            {config.columns.map((col: any) => (
+                              <td key={col.id} className="border border-surface-200 p-1">
+                                <input
+                                  type={col.type === 'email' ? 'email' : 'text'}
+                                  value={row[col.id] || ''}
+                                  onChange={(e) => updateCell(rowIndex, col.id, e.target.value)}
+                                  className="w-full px-2 py-1 text-sm border-0 focus:ring-1 focus:ring-primary-500 rounded"
+                                  placeholder={col.label}
+                                />
+                              </td>
+                            ))}
+                            <td className="border border-surface-200 p-1 text-center">
+                              <button
+                                type="button"
+                                onClick={() => removeRow(rowIndex)}
+                                className="text-surface-400 hover:text-accent-rose p-1"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {rows.length === 0 && (
+                          <tr>
+                            <td colSpan={config.columns.length + 1} className="border border-surface-200 px-3 py-4 text-center text-surface-500 text-sm">
+                              No rows added yet
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                  {rows.length < (config.max_rows || 10) && (
+                    <button
+                      type="button"
+                      onClick={addRow}
+                      className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {config.add_button_text || 'Add Row'}
+                    </button>
+                  )}
+                </div>
+              )
+            }}
+          />
+        )
+
       default:
         return (
           <Controller

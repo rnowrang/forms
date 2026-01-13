@@ -148,7 +148,7 @@ class ReviewAction(Base):
     
     # Action details
     action_type: Mapped[ReviewActionType] = mapped_column(
-        Enum(ReviewActionType),
+        Enum('submit_for_review', 'request_changes', 'approve', 'reject', 'return_to_draft', name='reviewactiontype', create_type=False),
         nullable=False
     )
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
