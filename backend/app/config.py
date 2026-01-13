@@ -17,8 +17,8 @@ class Settings(BaseSettings):
     algorithm: str = "HS256"
     access_token_expire_minutes: int = 1440  # 24 hours
     
-    # CORS
-    cors_origins: str = "http://localhost:5173,http://localhost:3000"
+    # CORS origins (comma-separated)
+    cors_origins: str = "http://localhost:5173,http://localhost:3000,https://irb-forms-frontend.onrender.com"
     
     # File storage paths (relative for local dev)
     upload_dir: str = "./storage/uploads"
