@@ -15,18 +15,16 @@ import {
   Download,
   HelpCircle,
   Plus,
-  Trash2,
 } from 'lucide-react'
 import { formsApi, templatesApi, reviewApi, versionsApi, exportApi } from '../lib/api'
-import type { Template, FormInstance, TemplateSchemaSection, TemplateSchemaField } from '../types'
-import clsx from 'clsx'
+import type { TemplateSchemaSection, TemplateSchemaField } from '../types'
 
 // Simple debounce utility
 function useDebouncedCallback<T extends (...args: any[]) => any>(
   callback: T,
   delay: number
 ): T {
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null)
+  const [timer, setTimer] = useState<ReturnType<typeof setTimeout> | null>(null)
   
   return useCallback((...args: Parameters<T>) => {
     if (timer) clearTimeout(timer)

@@ -8,8 +8,6 @@ import {
   Download,
   History,
   MessageSquare,
-  ChevronDown,
-  ChevronRight,
   Loader2,
   Send,
   CheckCircle,
@@ -21,7 +19,7 @@ import {
 } from 'lucide-react'
 import { formsApi, templatesApi, versionsApi, reviewApi, auditApi, exportApi } from '../lib/api'
 import { useAuthStore } from '../stores/authStore'
-import type { FormInstance, FormVersion, ChangeEvent, CommentThread, FormStatus } from '../types'
+import type { FormVersion, ChangeEvent, CommentThread, FormStatus } from '../types'
 import clsx from 'clsx'
 import { format } from 'date-fns'
 
@@ -93,7 +91,7 @@ export default function FormViewPage() {
     },
   })
 
-  const returnToDraftMutation = useMutation({
+  const _returnToDraftMutation = useMutation({
     mutationFn: () => reviewApi.returnToDraft(Number(id)),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['form', id] })
@@ -158,7 +156,7 @@ export default function FormViewPage() {
     )
   }
 
-  const status = statusConfig[form.status]
+  const status = statusConfig[form.status as FormStatus]
   const openComments = comments?.filter((t: CommentThread) => !t.is_resolved) || []
 
   return (
@@ -218,7 +216,7 @@ export default function FormViewPage() {
                 Request Changes
               </button>
               <button
-                onClick={() => approveMutation.mutate()}
+                onClick={() => approveMutation.mutate(undefined)}
                 className="btn-success"
               >
                 <CheckCircle className="w-4 h-4" />

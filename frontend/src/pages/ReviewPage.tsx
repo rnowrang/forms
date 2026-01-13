@@ -10,9 +10,7 @@ import {
   User,
 } from 'lucide-react'
 import { formsApi } from '../lib/api'
-import { useAuthStore } from '../stores/authStore'
 import type { FormInstance, FormStatus } from '../types'
-import clsx from 'clsx'
 import { format } from 'date-fns'
 
 const statusConfig: Record<FormStatus, { label: string; icon: any; class: string }> = {
@@ -24,7 +22,6 @@ const statusConfig: Record<FormStatus, { label: string; icon: any; class: string
 }
 
 export default function ReviewPage() {
-  const { user } = useAuthStore()
   
   const { data: forms, isLoading } = useQuery({
     queryKey: ['forms', 'all'],

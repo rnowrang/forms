@@ -5,18 +5,15 @@ import {
   ArrowLeft,
   FileText,
   Loader2,
-  Save,
   Eye,
   EyeOff,
-  Plus,
   ChevronDown,
   ChevronRight,
-  Trash2,
   GripVertical,
 } from 'lucide-react'
 import { templatesApi } from '../lib/api'
 import { useAuthStore } from '../stores/authStore'
-import type { Template, TemplateSchemaSection, TemplateSchemaField } from '../types'
+import type { TemplateSchemaSection, TemplateSchemaField } from '../types'
 import { useState } from 'react'
 import clsx from 'clsx'
 
@@ -35,7 +32,7 @@ export default function TemplateDetailPage() {
     enabled: !!id,
   })
 
-  const updateMutation = useMutation({
+  const _updateMutation = useMutation({
     mutationFn: (data: any) => templatesApi.update(Number(id), data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['template', id] })
