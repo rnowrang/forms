@@ -16,7 +16,6 @@ import {
 import { formsApi, templatesApi } from '../lib/api'
 import { useAuthStore } from '../stores/authStore'
 import type { FormInstance, FormStatus } from '../types'
-import clsx from 'clsx'
 
 const statusConfig: Record<FormStatus, { label: string; icon: any; class: string }> = {
   draft: { label: 'Draft', icon: FileText, class: 'badge-draft' },

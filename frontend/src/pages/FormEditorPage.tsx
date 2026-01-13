@@ -1,9 +1,8 @@
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useForm, Controller, useWatch } from 'react-hook-form'
 import toast from 'react-hot-toast'
-import debounce from 'lodash.debounce'
 import {
   ArrowLeft,
   Save,
@@ -15,6 +14,7 @@ import {
   Download,
   HelpCircle,
   Plus,
+  Trash2,
 } from 'lucide-react'
 import { formsApi, templatesApi, reviewApi, versionsApi, exportApi } from '../lib/api'
 import type { TemplateSchemaSection, TemplateSchemaField } from '../types'
@@ -59,7 +59,7 @@ export default function FormEditorPage() {
   })
 
   // Form state
-  const { control, watch, setValue, getValues } = useForm({
+  const { control, setValue, getValues } = useForm({
     defaultValues: form?.data || {},
   })
 
@@ -575,11 +575,12 @@ function FormField({
             render={({ field: { value, onChange: formOnChange } }) => {
               const rows = Array.isArray(value) ? value : []
               const config = field.repeatable_config || { columns: [], max_rows: 10 }
+              const columns = config.columns || []
 
               const addRow = () => {
                 if (rows.length < (config.max_rows || 10)) {
                   const newRow: Record<string, string> = {}
-                  config.columns.forEach((col: any) => {
+                  columns.forEach((col: any) => {
                     newRow[col.id] = ''
                   })
                   const newRows = [...rows, newRow]
@@ -608,7 +609,7 @@ function FormField({
                     <table className="w-full border-collapse">
                       <thead>
                         <tr className="bg-surface-50">
-                          {config.columns.map((col: any) => (
+                          {columns.map((col: any) => (
                             <th key={col.id} className="px-3 py-2 text-left text-sm font-medium text-surface-700 border border-surface-200">
                               {col.label}
                             </th>
@@ -619,7 +620,7 @@ function FormField({
                       <tbody>
                         {rows.map((row: any, rowIndex: number) => (
                           <tr key={rowIndex}>
-                            {config.columns.map((col: any) => (
+                            {columns.map((col: any) => (
                               <td key={col.id} className="border border-surface-200 p-1">
                                 <input
                                   type={col.type === 'email' ? 'email' : 'text'}
@@ -643,7 +644,7 @@ function FormField({
                         ))}
                         {rows.length === 0 && (
                           <tr>
-                            <td colSpan={config.columns.length + 1} className="border border-surface-200 px-3 py-4 text-center text-surface-500 text-sm">
+                            <td colSpan={columns.length + 1} className="border border-surface-200 px-3 py-4 text-center text-surface-500 text-sm">
                               No rows added yet
                             </td>
                           </tr>
@@ -658,7 +659,7 @@ function FormField({
                       className="flex items-center gap-2 text-sm text-primary-600 hover:text-primary-700"
                     >
                       <Plus className="w-4 h-4" />
-                      {config.add_button_text || 'Add Row'}
+                      {(config as any).add_button_text || 'Add Row'}
                     </button>
                   )}
                 </div>

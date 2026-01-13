@@ -32,18 +32,6 @@ export default function TemplateDetailPage() {
     enabled: !!id,
   })
 
-  const _updateMutation = useMutation({
-    mutationFn: (data: any) => templatesApi.update(Number(id), data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['template', id] })
-      queryClient.invalidateQueries({ queryKey: ['templates'] })
-      toast.success('Template updated')
-    },
-    onError: () => {
-      toast.error('Failed to update template')
-    },
-  })
-
   const publishMutation = useMutation({
     mutationFn: (publish: boolean) =>
       publish ? templatesApi.publish(Number(id)) : templatesApi.unpublish(Number(id)),

@@ -91,14 +91,6 @@ export default function FormViewPage() {
     },
   })
 
-  const _returnToDraftMutation = useMutation({
-    mutationFn: () => reviewApi.returnToDraft(Number(id)),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['form', id] })
-      toast.success('Form returned to draft')
-    },
-  })
-
   const addCommentMutation = useMutation({
     mutationFn: (data: { content: string; field_id?: string }) => 
       reviewApi.createComment(Number(id), data),
