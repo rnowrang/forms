@@ -1,0 +1,668 @@
+{
+    "sections": [
+        {
+            "id": "sec_investigator_info",
+            "title": "I. Investigator Information",
+            "order": 0,
+            "collapsible": true,
+            "description": "Information about the principal investigator and study personnel"
+        },
+        {
+            "id": "sec_study_info",
+            "title": "II. Study Information",
+            "order": 1,
+            "collapsible": true
+        },
+        {
+            "id": "sec_data_collection",
+            "title": "III. Description of Data to be Collected",
+            "order": 2,
+            "collapsible": true,
+            "description": "Describe the data to be collected for research purposes"
+        },
+        {
+            "id": "sec_benefits",
+            "title": "IV. Benefits",
+            "order": 3,
+            "collapsible": true
+        },
+        {
+            "id": "sec_risks",
+            "title": "V. Risks",
+            "order": 4,
+            "collapsible": true,
+            "description": "Plan for minimizing potential breach of confidentiality"
+        },
+        {
+            "id": "sec_safeguards",
+            "title": "VI. Safeguards for Data Storage, Transmittal, and Transport",
+            "order": 5,
+            "collapsible": true
+        },
+        {
+            "id": "sec_other_info",
+            "title": "VII. Other Required Information",
+            "order": 6,
+            "collapsible": true
+        },
+        {
+            "id": "sec_signatures",
+            "title": "VIII. Supporting Signatures",
+            "order": 7,
+            "collapsible": true,
+            "description": "Signatures will be collected separately"
+        }
+    ],
+    "fields": [
+        {
+            "id": "investigator.pi_name",
+            "type": "text",
+            "label": "Principal Investigator (name, degrees)",
+            "section_id": "sec_investigator_info",
+            "order": 0,
+            "required": true,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 1,
+                "column_index": 0
+            }
+        },
+        {
+            "id": "investigator.pi_dept",
+            "type": "text",
+            "label": "Department/Section",
+            "section_id": "sec_investigator_info",
+            "order": 1,
+            "required": true,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 1,
+                "column_index": 1
+            }
+        },
+        {
+            "id": "investigator.pi_ext",
+            "type": "text",
+            "label": "Extension",
+            "section_id": "sec_investigator_info",
+            "order": 2,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 1,
+                "column_index": 3
+            }
+        },
+        {
+            "id": "investigator.pi_email",
+            "type": "email",
+            "label": "E-Mail",
+            "section_id": "sec_investigator_info",
+            "order": 3,
+            "required": true,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 1,
+                "column_index": 4
+            }
+        },
+        {
+            "id": "investigator.pi_faculty_appt",
+            "type": "checkbox",
+            "label": "Full Time Faculty",
+            "section_id": "sec_investigator_info",
+            "order": 4,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 1,
+                "column_index": 7
+            }
+        },
+        {
+            "id": "investigator.other_personnel",
+            "type": "repeatable",
+            "label": "Other Personnel Viewing Identifiable Data",
+            "section_id": "sec_investigator_info",
+            "order": 5,
+            "anchor": {
+                "type": "table",
+                "table_index": 0,
+                "start_row": 3
+            },
+            "repeatable_config": {
+                "min_rows": 0,
+                "max_rows": 5,
+                "add_button_text": "Add Personnel",
+                "columns": [
+                    {"id": "name", "label": "Name, Degrees", "type": "text", "width": "25%"},
+                    {"id": "dept", "label": "Dept./Section", "type": "text", "width": "20%"},
+                    {"id": "ext", "label": "Ext.", "type": "text", "width": "10%"},
+                    {"id": "email", "label": "E-Mail", "type": "email", "width": "25%"},
+                    {"id": "role", "label": "Role on Study", "type": "text", "width": "20%"}
+                ]
+            }
+        },
+        {
+            "id": "investigator.contact_name",
+            "type": "text",
+            "label": "Preferred Study Contact (if additional to PI)",
+            "section_id": "sec_investigator_info",
+            "order": 6,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 8,
+                "column_index": 0
+            }
+        },
+        {
+            "id": "investigator.contact_ext",
+            "type": "text",
+            "label": "Contact Extension",
+            "section_id": "sec_investigator_info",
+            "order": 7,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 8,
+                "column_index": 1
+            }
+        },
+        {
+            "id": "investigator.contact_email",
+            "type": "email",
+            "label": "Contact E-Mail",
+            "section_id": "sec_investigator_info",
+            "order": 8,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 0,
+                "row_index": 8,
+                "column_index": 2
+            }
+        },
+        {
+            "id": "study.title",
+            "type": "textarea",
+            "label": "Title of Protocol",
+            "section_id": "sec_study_info",
+            "order": 0,
+            "required": true,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "TITLE OF PROTOCOL"
+            }
+        },
+        {
+            "id": "study.start_date",
+            "type": "date",
+            "label": "Project Start Date",
+            "section_id": "sec_study_info",
+            "order": 1,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "PROJECT START DATE"
+            }
+        },
+        {
+            "id": "study.funding_source",
+            "type": "select",
+            "label": "Funding Source",
+            "section_id": "sec_study_info",
+            "order": 2,
+            "required": true,
+            "options": [
+                {"value": "none", "label": "None"},
+                {"value": "intramural", "label": "Intramural"},
+                {"value": "extramural", "label": "Extramural"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "FUNDING SOURCE"
+            }
+        },
+        {
+            "id": "study.intramural_dept",
+            "type": "text",
+            "label": "If intramural, what department or fund?",
+            "section_id": "sec_study_info",
+            "order": 3,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "intramural, what department"
+            }
+        },
+        {
+            "id": "study.extramural_sponsor",
+            "type": "text",
+            "label": "If extramural, what is the name of the sponsor?",
+            "section_id": "sec_study_info",
+            "order": 4,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "extramural, what is the name"
+            }
+        },
+        {
+            "id": "data.medical_records",
+            "type": "checkbox",
+            "label": "Medical records from LLEAP (existing data, not prospective)",
+            "section_id": "sec_data_collection",
+            "order": 0,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Medical records from LLEAP"
+            }
+        },
+        {
+            "id": "data.date_range_from",
+            "type": "date",
+            "label": "Date Range From",
+            "section_id": "sec_data_collection",
+            "order": 1
+        },
+        {
+            "id": "data.date_range_to",
+            "type": "date",
+            "label": "Date Range To",
+            "section_id": "sec_data_collection",
+            "order": 2
+        },
+        {
+            "id": "data.other_archived",
+            "type": "textarea",
+            "label": "Other Archived Data - Describe",
+            "section_id": "sec_data_collection",
+            "order": 3,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Other archived data"
+            }
+        },
+        {
+            "id": "data.subject_types",
+            "type": "repeatable",
+            "label": "Subject Types and Numbers",
+            "section_id": "sec_data_collection",
+            "order": 4,
+            "anchor": {
+                "type": "table",
+                "table_index": 1,
+                "start_row": 1
+            },
+            "repeatable_config": {
+                "min_rows": 1,
+                "max_rows": 6,
+                "add_button_text": "Add Subject Type",
+                "columns": [
+                    {"id": "type", "label": "Type of Subject(s)", "type": "text", "width": "60%"},
+                    {"id": "number", "label": "Number of Records", "type": "text", "width": "40%"}
+                ]
+            }
+        },
+        {
+            "id": "data.inclusion_criteria",
+            "type": "textarea",
+            "label": "Criteria for inclusion of subject data",
+            "section_id": "sec_data_collection",
+            "order": 5,
+            "required": true,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Criteria for inclusion"
+            }
+        },
+        {
+            "id": "data.exclusion_criteria",
+            "type": "textarea",
+            "label": "Criteria for exclusion of subject data",
+            "section_id": "sec_data_collection",
+            "order": 6,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Criteria for exclusion"
+            }
+        },
+        {
+            "id": "data.source",
+            "type": "checkbox_group",
+            "label": "Source of Data",
+            "section_id": "sec_data_collection",
+            "order": 7,
+            "options": [
+                {"value": "lluh_entity", "label": "LLUH entity - data from investigators' patients, students, employees"},
+                {"value": "lluh_department", "label": "LLUH department (not represented by investigator)"},
+                {"value": "non_lluh", "label": "Non-LLUH entity (letter of agreement required)"},
+                {"value": "other", "label": "Other"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "SOURCE OF DATA"
+            }
+        },
+        {
+            "id": "data.department_name",
+            "type": "text",
+            "label": "Department Name",
+            "section_id": "sec_data_collection",
+            "order": 8,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Department name"
+            }
+        },
+        {
+            "id": "data.non_lluh_entity",
+            "type": "text",
+            "label": "Non-LLUH Entity - Specify",
+            "section_id": "sec_data_collection",
+            "order": 9
+        },
+        {
+            "id": "data.source_other",
+            "type": "textarea",
+            "label": "Other Source - Specify",
+            "section_id": "sec_data_collection",
+            "order": 10
+        },
+        {
+            "id": "benefits.description",
+            "type": "textarea",
+            "label": "Expected Benefits",
+            "section_id": "sec_benefits",
+            "order": 0,
+            "required": true,
+            "placeholder": "Describe the expected benefits of this research",
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "BENEFITS"
+            }
+        },
+        {
+            "id": "risks.identifiers_recorded",
+            "type": "select",
+            "label": "Will subject-related identifiers be recorded?",
+            "section_id": "sec_risks",
+            "order": 0,
+            "required": true,
+            "options": [
+                {"value": "no", "label": "No, subject-related identifiers will not be recorded"},
+                {"value": "yes", "label": "Yes, subject-related identifiers will be recorded"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "identifiers be recorded"
+            }
+        },
+        {
+            "id": "risks.identifiers_destruction",
+            "type": "select",
+            "label": "When will identifiers be destroyed?",
+            "section_id": "sec_risks",
+            "order": 1,
+            "options": [
+                {"value": "after_analysis", "label": "After completion of data analysis"},
+                {"value": "retained", "label": "Identifiers will be retained indefinitely"},
+                {"value": "other", "label": "Other"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "destroyed at the earliest"
+            }
+        },
+        {
+            "id": "risks.retention_reason",
+            "type": "textarea",
+            "label": "Reason for retaining identifiers indefinitely",
+            "section_id": "sec_risks",
+            "order": 2
+        },
+        {
+            "id": "risks.identifiers_list",
+            "type": "checkbox_group",
+            "label": "What identifiers will be recorded?",
+            "section_id": "sec_risks",
+            "order": 3,
+            "options": [
+                {"value": "names", "label": "Names"},
+                {"value": "ssn", "label": "Social security number"},
+                {"value": "email", "label": "E-mail addresses"},
+                {"value": "phone", "label": "Phone numbers"},
+                {"value": "address", "label": "Address"},
+                {"value": "dob", "label": "Date of birth"},
+                {"value": "mrn", "label": "Medical record number"},
+                {"value": "other", "label": "Other identifiers"}
+            ],
+            "anchor": {
+                "type": "table",
+                "table_index": 3
+            }
+        },
+        {
+            "id": "risks.code_method",
+            "type": "select",
+            "label": "Method for creating a code/key",
+            "section_id": "sec_risks",
+            "order": 4,
+            "options": [
+                {"value": "random", "label": "Random - The code/key is not derived from any identifiers"},
+                {"value": "linking", "label": "Linking - The code/key is derived from one or more identifiers"},
+                {"value": "none", "label": "No code/key will be used"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "general method for creating"
+            }
+        },
+        {
+            "id": "risks.no_code_explanation",
+            "type": "textarea",
+            "label": "If no code, explain need for recording identifiers",
+            "section_id": "sec_risks",
+            "order": 5
+        },
+        {
+            "id": "safeguards.code_storage",
+            "type": "textarea",
+            "label": "Where will the code with identifiers be stored securely?",
+            "section_id": "sec_safeguards",
+            "order": 0,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "code with identifiers will be stored"
+            }
+        },
+        {
+            "id": "safeguards.storage_method",
+            "type": "checkbox_group",
+            "label": "How will you store the research data?",
+            "section_id": "sec_safeguards",
+            "order": 1,
+            "options": [
+                {"value": "locked_suite", "label": "Locked suite"},
+                {"value": "locked_office", "label": "Locked office"},
+                {"value": "locked_cabinet", "label": "Locked file cabinet"},
+                {"value": "electronic", "label": "Electronically with password protection"},
+                {"value": "other", "label": "Other"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "store the research data"
+            }
+        },
+        {
+            "id": "safeguards.storage_other",
+            "type": "text",
+            "label": "Other storage method - specify",
+            "section_id": "sec_safeguards",
+            "order": 2
+        },
+        {
+            "id": "safeguards.transmittal_method",
+            "type": "checkbox_group",
+            "label": "How will you transmit or transport research data?",
+            "section_id": "sec_safeguards",
+            "order": 3,
+            "options": [
+                {"value": "fax", "label": "Fax with confidentiality cover sheet"},
+                {"value": "courier", "label": "Courier in sealed envelope"},
+                {"value": "hand_delivery", "label": "Hand-delivery in sealed envelope"},
+                {"value": "mail", "label": "U.S. Mail or Express Mail"},
+                {"value": "vehicle", "label": "Vehicle (data not left unattended)"},
+                {"value": "email_llu", "label": "LLU/LLUMC email system"},
+                {"value": "shredded", "label": "Hardcopy no longer needed will be shredded"},
+                {"value": "other", "label": "Other"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "transmit or transport"
+            }
+        },
+        {
+            "id": "safeguards.transmittal_other",
+            "type": "text",
+            "label": "Other transmittal method - specify",
+            "section_id": "sec_safeguards",
+            "order": 4
+        },
+        {
+            "id": "other.phs_submission",
+            "type": "select",
+            "label": "Is the study being submitted to Public Health Service for sponsorship?",
+            "section_id": "sec_other_info",
+            "order": 0,
+            "options": [
+                {"value": "no", "label": "No"},
+                {"value": "yes", "label": "Yes"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "Public Health Service"
+            }
+        },
+        {
+            "id": "other.student_project",
+            "type": "select",
+            "label": "Is this a student project?",
+            "section_id": "sec_other_info",
+            "order": 1,
+            "options": [
+                {"value": "no", "label": "No"},
+                {"value": "yes", "label": "Yes"}
+            ],
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "student project"
+            }
+        },
+        {
+            "id": "signatures.pi_declaration",
+            "type": "checkbox",
+            "label": "I certify that all information provided is accurate and complete",
+            "section_id": "sec_signatures",
+            "order": 0,
+            "required": true,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "DECLARATION BY PRINCIPAL"
+            }
+        },
+        {
+            "id": "signatures.faculty_sponsor_cert",
+            "type": "checkbox",
+            "label": "As faculty sponsor, I certify oversight of this student project",
+            "section_id": "sec_signatures",
+            "order": 1,
+            "anchor": {
+                "type": "paragraph",
+                "search_text": "faculty sponsor of a student"
+            }
+        }
+    ],
+    "rules": [
+        {
+            "id": "rule_funding_intramural",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "study.funding_source",
+                "operator": "equals",
+                "value": "intramural"
+            },
+            "target_field_ids": ["study.intramural_dept"]
+        },
+        {
+            "id": "rule_funding_extramural",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "study.funding_source",
+                "operator": "equals",
+                "value": "extramural"
+            },
+            "target_field_ids": ["study.extramural_sponsor"]
+        },
+        {
+            "id": "rule_identifiers_yes",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "risks.identifiers_recorded",
+                "operator": "equals",
+                "value": "yes"
+            },
+            "target_field_ids": ["risks.identifiers_destruction", "risks.identifiers_list", "risks.code_method"]
+        },
+        {
+            "id": "rule_identifiers_retained",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "risks.identifiers_destruction",
+                "operator": "equals",
+                "value": "retained"
+            },
+            "target_field_ids": ["risks.retention_reason"]
+        },
+        {
+            "id": "rule_no_code",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "risks.code_method",
+                "operator": "equals",
+                "value": "none"
+            },
+            "target_field_ids": ["risks.no_code_explanation"]
+        },
+        {
+            "id": "rule_storage_other",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "safeguards.storage_method",
+                "operator": "contains",
+                "value": "other"
+            },
+            "target_field_ids": ["safeguards.storage_other"]
+        },
+        {
+            "id": "rule_transmittal_other",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "safeguards.transmittal_method",
+                "operator": "contains",
+                "value": "other"
+            },
+            "target_field_ids": ["safeguards.transmittal_other"]
+        },
+        {
+            "id": "rule_student_project",
+            "type": "show_hide",
+            "condition": {
+                "field_id": "other.student_project",
+                "operator": "equals",
+                "value": "yes"
+            },
+            "target_field_ids": ["signatures.faculty_sponsor_cert"]
+        }
+    ]
+}
