@@ -1,0 +1,59 @@
+# Render.com Infrastructure as Code
+# Deploy: Connect repo to Render and it will auto-detect this file
+#
+# Note: Persistent disk requires a paid plan ($7/mo minimum for Starter)
+# Without disk, uploaded files will be lost on redeploy
+# For production, upgrade backend plan to 'starter' or higher
+
+databases:
+  - name: irb-forms-db
+    databaseName: irb_forms
+    user: irb_forms_user
+    region: oregon
+    plan: free
+    ipAllowList: []
+
+services:
+  # Backend API (FastAPI)
+  - type: web
+    name: irb-forms-backend
+    runtime: docker
+    region: oregon
+    plan: starter  # Required for persistent disk (change to 'free' to test without disk)
+    dockerfilePath: ./backend/Dockerfile.prod
+    dockerContext: ./backend
+    healthCheckPath: /health
+    disk:
+      name: irb-storage
+      mountPath: /app/storage
+      sizeGB: 1  # Remove disk section if using free plan
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: irb-forms-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: https://irb-forms-frontend.onrender.com
+      - key: STORAGE_PATH
+        value: /app/storage
+      - key: LIBREOFFICE_PATH
+        value: /usr/bin/libreoffice
+
+  # Frontend (React/Vite with Nginx)
+  - type: web
+    name: irb-forms-frontend
+    runtime: docker
+    region: oregon
+    plan: free
+    dockerfilePath: ./frontend/Dockerfile.prod
+    dockerContext: ./frontend
+    buildArgs:
+      - key: VITE_API_URL
+        value: https://irb-forms-backend.onrender.com/api
+    envVars:
+      - key: VITE_API_URL
+        value: https://irb-forms-backend.onrender.com/api
