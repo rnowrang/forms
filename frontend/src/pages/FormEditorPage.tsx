@@ -353,14 +353,42 @@ export default function FormEditorPage() {
                 
                 {isExpanded && (
                   <div className="form-section-content space-y-6">
-                    {sectionFields.map((field: TemplateSchemaField) => (
-                      <FormField
-                        key={field.id}
-                        field={field}
-                        control={control}
-                        onChange={(value) => handleFieldChange(field.id, value, field.label)}
-                      />
-                    ))}
+                    {sectionFields.map((field: TemplateSchemaField, index: number) => {
+                      const indent = field.indent || 0
+                      const showGroupStart = field.group_start
+                      const showGroupEnd = field.group_end ||
+                        (index < sectionFields.length - 1 && sectionFields[index + 1].group_start)
+
+                      return (
+                        <div key={field.id}>
+                          {/* Group header */}
+                          {showGroupStart && (
+                            <div className="text-sm font-medium text-surface-600 mb-3 mt-2 pb-1 border-b border-surface-200">
+                              {field.group_start}
+                            </div>
+                          )}
+
+                          {/* Field with indentation */}
+                          <div
+                            className={`
+                              ${indent > 0 ? 'ml-6 pl-4 border-l-2 border-surface-200' : ''}
+                              ${indent > 1 ? 'ml-12' : ''}
+                            `}
+                          >
+                            <FormField
+                              field={field}
+                              control={control}
+                              onChange={(value) => handleFieldChange(field.id, value, field.label)}
+                            />
+                          </div>
+
+                          {/* Group end spacing */}
+                          {showGroupEnd && (
+                            <div className="mt-4 mb-2" />
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>

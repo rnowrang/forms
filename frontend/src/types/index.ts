@@ -20,6 +20,10 @@ export interface TemplateSchemaField {
     columns?: { id: string; label: string; type: string }[]
   }
   order?: number
+  // Visual grouping
+  indent?: number  // Indentation level (0, 1, 2) for nested/related fields
+  group_start?: string  // Start a new visual group with this label
+  group_end?: boolean  // End the current visual group
 }
 
 export interface TemplateSchemaSection {

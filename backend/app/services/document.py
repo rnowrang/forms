@@ -160,6 +160,129 @@ class DocumentService:
                     else:
                         cell.text = combined_contact
 
+        # Handle Funding fields specially (Table 0, Row 14)
+        # The cell has multiple paragraphs - need to modify each one individually
+        funding_intramural = flat_data.get('funding.intramural_dept', '')
+        funding_extramural = flat_data.get('funding.extramural_sponsor', '')
+        funding_federal = flat_data.get('funding.federally_funded', '')
+
+        if funding_intramural or funding_extramural or funding_federal:
+            if len(doc.tables) > 0:
+                table = doc.tables[0]
+                if len(table.rows) > 14:
+                    cell = table.rows[14].cells[0]
+
+                    # Modify each paragraph individually
+                    for para in cell.paragraphs:
+                        para_text = para.text
+
+                        if funding_intramural and 'department or fund' in para_text.lower():
+                            # Clear and rewrite this paragraph
+                            para.clear()
+                            para.add_run(f"If intramural, what department or fund? {funding_intramural}")
+
+                        elif funding_extramural and 'name of the sponsor' in para_text.lower():
+                            para.clear()
+                            para.add_run(f"If extramural, what is the name of the sponsor? {funding_extramural}")
+
+                        elif funding_federal and 'federally funded' in para_text.lower():
+                            federal_label = "Yes" if funding_federal == "yes" else "No"
+                            para.clear()
+                            para.add_run(f"Is the study federally funded? {federal_label}")
+
+        # Handle Section V.B - Drugs/Biologics/Devices fields
+        drugs_biologics_devices = flat_data.get('study.drugs_biologics_devices', [])
+        fda_regulations = flat_data.get('study.fda_regulations_apply', '')
+        ind_number = flat_data.get('study.ind_number', '')
+        ide_number = flat_data.get('study.ide_number', '')
+        study_phase = flat_data.get('study.phase', [])
+        schedule_drugs = flat_data.get('study.schedule_drugs', '')
+        schedule_approval = flat_data.get('study.schedule_drugs_approval', '')
+
+        # Fill paragraph 20 - drugs/biologics/devices checkboxes
+        if isinstance(drugs_biologics_devices, list) and len(drugs_biologics_devices) > 0:
+            if len(doc.paragraphs) > 20:
+                para = doc.paragraphs[20]
+                text = para.text
+                # Mark which items are checked
+                if 'drugs' in drugs_biologics_devices:
+                    text = text.replace('drugs ,', 'drugs ☑,')
+                if 'biologics' in drugs_biologics_devices:
+                    text = text.replace('biologics ,', 'biologics ☑,')
+                if 'devices' in drugs_biologics_devices:
+                    text = text.replace('devices  ', 'devices ☑ ')
+                para.clear()
+                para.add_run(text)
+
+            # Para 22 - Mark Yes and FDA regulations
+            if len(doc.paragraphs) > 22:
+                para = doc.paragraphs[22]
+                text = para.text
+                if fda_regulations == 'yes':
+                    text = text.replace('Yes:', 'Yes ☑:')
+                para.clear()
+                para.add_run(text)
+        else:
+            # No drugs/biologics/devices - mark No in para 21
+            if len(doc.paragraphs) > 21:
+                para = doc.paragraphs[21]
+                para.clear()
+                para.add_run("No ☑")
+
+        # Fill paragraph 23 - IND/IDE numbers (when FDA regulations = Yes)
+        if fda_regulations == 'yes':
+            if len(doc.paragraphs) > 23:
+                para = doc.paragraphs[23]
+                text = f"Yes ☑:  Provide IND# {ind_number or '______'}  IDE# {ide_number or '______'}"
+                para.clear()
+                para.add_run(text)
+        elif fda_regulations == 'no' and len(doc.paragraphs) > 24:
+            # Mark No for FDA regulations in paragraph 24
+            para = doc.paragraphs[24]
+            text = para.text
+            if text.startswith('No:'):
+                text = text.replace('No:', 'No ☑:', 1)
+                para.clear()
+                para.add_run(text)
+
+        # Fill paragraph 25 - Phase checkboxes
+        phase_other_text = flat_data.get('study.phase_other', '')
+        if isinstance(study_phase, list) and len(study_phase) > 0:
+            if len(doc.paragraphs) > 25:
+                para = doc.paragraphs[25]
+                text = "2.  Check appropriately:"
+                for p in ['phase1', 'phase2', 'phase3', 'phase4', 'emergency']:
+                    label = {'phase1': 'Phase I', 'phase2': 'Phase II', 'phase3': 'Phase III', 'phase4': 'Phase IV', 'emergency': 'Emergency Use'}[p]
+                    if p in study_phase:
+                        text += f" {label} ☑,"
+                    else:
+                        text += f" {label} ,"
+                # Handle Other with specify field
+                if 'other' in study_phase:
+                    text += f" Other ☑, specify: {phase_other_text}"
+                else:
+                    text += " Other, specify:"
+                para.clear()
+                para.add_run(text)
+
+        # Fill paragraph 27-28 - Schedule drugs Yes/No
+        if schedule_drugs == 'no' and len(doc.paragraphs) > 27:
+            para = doc.paragraphs[27]
+            para.clear()
+            para.add_run("No ☑")
+        elif schedule_drugs == 'yes' and len(doc.paragraphs) > 28:
+            # Mark Yes and fill approval info in paragraph 28
+            para = doc.paragraphs[28]
+            para.clear()
+            approval_text = "Yes ☑: This use must be approved by the California State Research Advisory Panel.  Indicate whether "
+            if schedule_approval == 'investigator':
+                approval_text += "you ☑ or the sponsor  will obtain this approval."
+            elif schedule_approval == 'sponsor':
+                approval_text += "you  or the sponsor ☑ will obtain this approval."
+            else:
+                approval_text += "you  or the sponsor  will obtain this approval."
+            para.add_run(approval_text)
+
         # Fill each field
         for field_id, value in flat_data.items():
             # Skip contact fields as they were handled above
@@ -184,10 +307,6 @@ class DocumentService:
                 continue
 
             DocumentService._write_value_to_anchor(doc, anchor, value, field_def)
-
-        # Fix header table borders for LibreOffice compatibility
-        # Table 0 Cell 0 (logo) should have no visible borders
-        DocumentService._fix_header_table_borders(doc)
 
         # Save the filled document
         doc.save(output_path)
@@ -394,35 +513,90 @@ class DocumentService:
         table_index = anchor.get("table_index", 0)
         row_index = anchor.get("row_index", 0)
         column_index = anchor.get("column_index", 1)
-        
+
         if table_index >= len(doc.tables):
             return
-        
+
         table = doc.tables[table_index]
-        
+
         if row_index >= len(table.rows):
             return
-        
+
         row = table.rows[row_index]
-        
+
         if column_index >= len(row.cells):
             return
-        
+
         cell = row.cells[column_index]
-        
-        # Format value
-        if isinstance(value, list):
+
+        # Format value based on field type
+        field_type = field_def.get("type", "text")
+        if field_type == "checkbox":
+            # For checkbox fields, show Yes/checkmark if checked
+            if isinstance(value, list) and len(value) > 0:
+                formatted_value = "Yes"
+            elif value:
+                formatted_value = "Yes"
+            else:
+                formatted_value = ""
+        elif field_type == "radio":
+            # For radio fields, show the label of the selected option
+            options = field_def.get("options", [])
+            option_map = {opt.get("value"): opt.get("label", opt.get("value")) for opt in options}
+            formatted_value = option_map.get(value, str(value) if value else "")
+        elif isinstance(value, list):
             formatted_value = ", ".join(str(v) for v in value)
         else:
             formatted_value = str(value) if value else ""
-        
-        # Set cell text
-        if cell.paragraphs:
-            para = cell.paragraphs[0]
-            para.clear()
-            para.add_run(formatted_value)
+
+        # Get current cell text
+        current_text = cell.text.strip() if cell.text else ""
+
+        # Check for special anchor options
+        append_to_label = anchor.get("append_to_label", False)
+        replace_pattern = anchor.get("replace_pattern")
+        replace_with = anchor.get("replace_with")
+        cell_paragraph_index = anchor.get("cell_paragraph_index")
+
+        # If specific paragraph index is specified, write to that paragraph
+        if cell_paragraph_index is not None and formatted_value:
+            if cell_paragraph_index < len(cell.paragraphs):
+                para = cell.paragraphs[cell_paragraph_index]
+                para.clear()
+                para.add_run(formatted_value)
+            return
+
+        if replace_pattern and replace_with and formatted_value:
+            # Replace pattern in existing text
+            import re
+            new_text = re.sub(
+                replace_pattern,
+                replace_with.replace("{value}", formatted_value),
+                current_text
+            )
+            if cell.paragraphs:
+                para = cell.paragraphs[0]
+                para.clear()
+                para.add_run(new_text)
+            else:
+                cell.text = new_text
+        elif append_to_label and current_text and formatted_value:
+            # Append value to existing label text
+            new_text = f"{current_text} {formatted_value}"
+            if cell.paragraphs:
+                para = cell.paragraphs[0]
+                para.clear()
+                para.add_run(new_text)
+            else:
+                cell.text = new_text
         else:
-            cell.text = formatted_value
+            # Set cell text (replace)
+            if cell.paragraphs:
+                para = cell.paragraphs[0]
+                para.clear()
+                para.add_run(formatted_value)
+            else:
+                cell.text = formatted_value
     
     @staticmethod
     def _fill_table_anchor(
