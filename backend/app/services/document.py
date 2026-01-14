@@ -17,12 +17,84 @@ from docx.shared import RGBColor
 from app.config import get_settings
 from app.models.template import Template
 from app.models.form import FormInstance, FormVersion, FormData
+from docx.oxml.ns import qn
+from lxml import etree
 
 settings = get_settings()
 
 
 class DocumentService:
     """Service for generating filled DOCX and PDF documents."""
+
+    @staticmethod
+    def _check_legacy_checkbox(para, check: bool = True) -> bool:
+        """
+        Check or uncheck a legacy FORMCHECKBOX in a paragraph.
+
+        Legacy checkboxes have structure:
+        <w:fldChar w:fldCharType="begin">
+          <w:ffData>
+            <w:checkBox>
+              <w:checked w:val="1"/>  <!-- Add this to check -->
+            </w:checkBox>
+          </w:ffData>
+        </w:fldChar>
+
+        Returns True if checkbox was found and updated.
+        """
+        for run in para.runs:
+            # Find ffData element containing checkbox
+            ffData = run._r.find('.//' + qn('w:ffData'))
+            if ffData is not None:
+                checkbox = ffData.find(qn('w:checkBox'))
+                if checkbox is not None:
+                    # Remove existing checked element if present
+                    existing_checked = checkbox.find(qn('w:checked'))
+                    if existing_checked is not None:
+                        checkbox.remove(existing_checked)
+
+                    # Add checked element if checking
+                    if check:
+                        checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                        checked_elem.set(qn('w:val'), '1')
+
+                    return True
+        return False
+
+    @staticmethod
+    def _check_checkbox_by_text(doc, search_text: str, check: bool = True) -> bool:
+        """
+        Find a paragraph containing search_text and check its FORMCHECKBOX.
+
+        Returns True if checkbox was found and checked.
+        """
+        search_lower = search_text.lower()
+        for para in doc.paragraphs:
+            if search_lower in para.text.lower():
+                if DocumentService._check_legacy_checkbox(para, check):
+                    return True
+        return False
+
+    @staticmethod
+    def _check_checkbox_in_table(doc, table_index: int, search_text: str, check: bool = True) -> bool:
+        """
+        Find a cell in a table containing search_text and check its FORMCHECKBOX.
+
+        Returns True if checkbox was found and checked.
+        """
+        if table_index >= len(doc.tables):
+            return False
+
+        table = doc.tables[table_index]
+        search_lower = search_text.lower()
+
+        for row in table.rows:
+            for cell in row.cells:
+                for para in cell.paragraphs:
+                    if search_lower in para.text.lower():
+                        if DocumentService._check_legacy_checkbox(para, check):
+                            return True
+        return False
 
     @staticmethod
     def _flatten_dict(d: Dict[str, Any], parent_key: str = '', sep: str = '.') -> Dict[str, Any]:
@@ -282,6 +354,455 @@ class DocumentService:
             else:
                 approval_text += "you  or the sponsor  will obtain this approval."
             para.add_run(approval_text)
+
+        # Handle Section V.A - Study Initiation (paragraphs 14-18)
+        study_initiated_by = flat_data.get('study.initiated_by', '')
+        study_initiated_other = flat_data.get('study.initiated_other', '')
+        if study_initiated_by:
+            # Map form values to paragraph text patterns
+            initiation_map = {
+                'local': 'Local investigator',
+                'sponsor_investigator': 'sponsor-investigator',
+                'cooperative': 'Cooperative group',
+                'external': 'External sponsor',
+                'other': 'Other, specify'
+            }
+            target_text = initiation_map.get(study_initiated_by, '')
+            if target_text:
+                DocumentService._check_checkbox_by_text(doc, target_text, True)
+
+            # Fill in "Other, specify" text if selected
+            if study_initiated_by == 'other' and study_initiated_other:
+                for para in doc.paragraphs:
+                    if 'other, specify' in para.text.lower():
+                        # Add the specified text after the checkbox
+                        for run in para.runs:
+                            if '\u2002' in run.text or '     ' in run.text:  # En-space placeholder
+                                run.text = study_initiated_other
+                                break
+                        break
+
+        # Handle Section V.C - Student Project (paragraph 32)
+        is_student_project = flat_data.get('study.is_student_project', '')
+        student_name = flat_data.get('study.student_name', '')
+        student_program = flat_data.get('study.student_program', '')
+        if is_student_project:
+            # Find paragraph 32 which has " No  Yes" pattern
+            for i, para in enumerate(doc.paragraphs):
+                para_text = para.text.strip()
+                if para_text == 'No  Yes' or para_text == 'No Yes':
+                    # Check previous paragraph to confirm it's student project
+                    if i > 0 and 'student project' in doc.paragraphs[i-1].text.lower():
+                        # This paragraph has two checkboxes: No then Yes
+                        checkbox_count = 0
+                        for run in para.runs:
+                            ffData = run._r.find('.//' + qn('w:ffData'))
+                            if ffData is not None:
+                                checkbox = ffData.find(qn('w:checkBox'))
+                                if checkbox is not None:
+                                    # Remove existing checked
+                                    existing = checkbox.find(qn('w:checked'))
+                                    if existing is not None:
+                                        checkbox.remove(existing)
+                                    # Check appropriate one (0=No, 1=Yes)
+                                    should_check = (checkbox_count == 0 and is_student_project == 'no') or \
+                                                   (checkbox_count == 1 and is_student_project == 'yes')
+                                    if should_check:
+                                        checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                        checked_elem.set(qn('w:val'), '1')
+                                    checkbox_count += 1
+                        break
+
+        # Handle Section V.D - Ionizing Radiation
+        ionizing_radiation = flat_data.get('study.ionizing_radiation', '')
+        if ionizing_radiation:
+            # Para 35: "No: Radiation Safety Committee..." or Para 36: "Yes: Will participants..."
+            if ionizing_radiation == 'no':
+                DocumentService._check_checkbox_by_text(doc, 'No: Radiation Safety Committee', True)
+            else:
+                DocumentService._check_checkbox_by_text(doc, 'Yes: Will participants in this study', True)
+
+        # Handle nested radiation questions if yes
+        radiation_direct_benefit = flat_data.get('study.radiation_direct_benefit', '')
+        if ionizing_radiation == 'yes' and radiation_direct_benefit:
+            if radiation_direct_benefit == 'no':
+                # Check "No: RSC review REQUIRED" (first occurrence after direct benefit question)
+                for para in doc.paragraphs:
+                    if 'direct medical benefits' in para.text.lower():
+                        # Find next No checkbox
+                        found = False
+                        for next_para in doc.paragraphs[doc.paragraphs.index(para)+1:]:
+                            if 'no: rsc review required' in next_para.text.lower():
+                                DocumentService._check_legacy_checkbox(next_para, True)
+                                found = True
+                                break
+                            if found:
+                                break
+                        break
+            else:
+                DocumentService._check_checkbox_by_text(doc, 'Yes: Is the proposed use', True)
+
+        # Handle Section V.E - SCRO (paragraph 48)
+        scro_required = flat_data.get('study.scro_required', '')
+        if scro_required:
+            # Paragraph 48 has "No     Yes: Letter of approval from SCRO"
+            for i, para in enumerate(doc.paragraphs):
+                if 'scro' in para.text.lower() and ('no' in para.text.lower() and 'yes' in para.text.lower()):
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and scro_required == 'no') or \
+                                               (checkbox_count == 1 and scro_required == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Handle Section V.F - IBC (paragraphs 53, 56, 57)
+        ibc_infectious = flat_data.get('study.ibc_infectious', '')
+        ibc_recombinant = flat_data.get('study.ibc_recombinant', '')
+        ibc_hazardous = flat_data.get('study.ibc_hazardous', '')
+
+        # IBC Infectious agents (para 53: "No     Yes: Letter of approval from IBC")
+        if ibc_infectious:
+            for para in doc.paragraphs:
+                if 'letter of approval from ibc' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and ibc_infectious == 'no') or \
+                                               (checkbox_count == 1 and ibc_infectious == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # IBC Recombinant (para 56: "No     Yes: Recombinant or synthetic")
+        if ibc_recombinant:
+            for para in doc.paragraphs:
+                if 'recombinant or synthetic' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and ibc_recombinant == 'no') or \
+                                               (checkbox_count == 1 and ibc_recombinant == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # IBC Hazardous (para 57: "No    Yes: Carcinogens, mutagens")
+        if ibc_hazardous:
+            for para in doc.paragraphs:
+                if 'carcinogens' in para.text.lower() or 'hazardous materials' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and ibc_hazardous == 'no') or \
+                                               (checkbox_count == 1 and ibc_hazardous == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Handle Section V.G - PHS Submission (paragraph 60)
+        phs_submission = flat_data.get('study.phs_submission', '')
+        if phs_submission:
+            for para in doc.paragraphs:
+                if 'phs policy' in para.text.lower() or 'public health service' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and phs_submission == 'no') or \
+                                               (checkbox_count == 1 and phs_submission == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Handle Section VI - Classification of Subjects (checkboxes in Table 2, Row 3)
+        vulnerable_populations = flat_data.get('population.vulnerable', [])
+        special_populations = flat_data.get('population.special', [])
+        special_other = flat_data.get('population.special_other', '')
+        other_populations = flat_data.get('population.other_populations', [])
+        other_populations_other = flat_data.get('population.other_populations_other', '')
+
+        # Classification is in Table 2, Row 3
+        if len(doc.tables) > 2:
+            table = doc.tables[2]
+            if len(table.rows) > 3:
+                row = table.rows[3]
+
+                # Cell 0 = Vulnerable populations
+                if len(row.cells) > 0 and isinstance(vulnerable_populations, list):
+                    cell = row.cells[0]
+                    pop_labels = {
+                        'abortuses': 'abortuses',
+                        'diminished_capacity': 'diminished',
+                        'economically_disadvantaged': 'economically disadvantaged',
+                        'educationally_disadvantaged': 'educationally disadvantaged',
+                        'fetuses': 'fetuses',
+                        'minors': 'minors',
+                        'neonates': 'neonates',
+                        'pregnant': 'pregnant',
+                        'prisoners': 'prisoners'
+                    }
+                    for para in cell.paragraphs:
+                        para_text_lower = para.text.lower()
+                        for pop_value, pop_search in pop_labels.items():
+                            if pop_search in para_text_lower and pop_value in vulnerable_populations:
+                                DocumentService._check_legacy_checkbox(para, True)
+                                break
+
+                # Cell 1 = Special populations
+                if len(row.cells) > 1 and isinstance(special_populations, list):
+                    cell = row.cells[1]
+                    pop_labels = {
+                        'elderly': 'elderly',
+                        'illiterate': 'illiterate',
+                        'institutionalized': 'institutionalized',
+                        'patients_inpatients': 'inpatients',
+                        'patients_outpatients': 'outpatients',
+                        'terminally_ill': 'terminally',
+                        'traumatized': 'traumatized'
+                    }
+                    for para in cell.paragraphs:
+                        para_text_lower = para.text.lower()
+                        for pop_value, pop_search in pop_labels.items():
+                            if pop_search in para_text_lower and pop_value in special_populations:
+                                DocumentService._check_legacy_checkbox(para, True)
+                                break
+                        # Handle "Other, specify" for special populations
+                        if special_other and 'other, specify' in para_text_lower:
+                            DocumentService._check_legacy_checkbox(para, True)
+                            # Add the specified text
+                            for run in para.runs:
+                                if '\u2002' in run.text:  # En-space placeholder
+                                    run.text = special_other
+                                    break
+
+                # Cell 2 = Other populations
+                if len(row.cells) > 2 and isinstance(other_populations, list):
+                    cell = row.cells[2]
+                    pop_labels = {
+                        'employees': 'employees',
+                        'female_only': 'female (excludes males)',
+                        'healthy': 'healthy (non-patient)',
+                        'male_only': 'male (excludes females)',
+                        'minorities': 'minorities',
+                        'non_english': 'non-english',
+                        'physically_handicapped': 'physically handicapped',
+                        'sda_cohort': 'seventh-day adventist',
+                        'students': 'students'
+                    }
+                    for para in cell.paragraphs:
+                        para_text_lower = para.text.lower()
+                        for pop_value, pop_search in pop_labels.items():
+                            if pop_search in para_text_lower and pop_value in other_populations:
+                                DocumentService._check_legacy_checkbox(para, True)
+                                break
+                        # Handle "Other, specify" for other populations
+                        if other_populations_other and 'other, specify' in para_text_lower:
+                            DocumentService._check_legacy_checkbox(para, True)
+                            for run in para.runs:
+                                if '\u2002' in run.text:
+                                    run.text = other_populations_other
+                                    break
+
+        # Handle Section VI - Recruitment fields
+        recruitment_source = flat_data.get('recruitment.source', [])
+        recruitment_source_other = flat_data.get('recruitment.source_other', '')
+        flyers_used = flat_data.get('recruitment.flyers_used', '')
+        verbal_used = flat_data.get('recruitment.verbal_used', '')
+        electronic_used = flat_data.get('recruitment.electronic_used', '')
+        electronic_description = flat_data.get('recruitment.electronic_description', '')
+
+        if isinstance(recruitment_source, list):
+            # Para 72: own_patients - "PI/collaborators will recruit"
+            if 'own_patients' in recruitment_source:
+                DocumentService._check_checkbox_by_text(doc, 'PI/collaborators will recruit', True)
+            # Para 73: letter_referrals - "letter to colleagues asking for referrals"
+            if 'letter_referrals' in recruitment_source:
+                DocumentService._check_checkbox_by_text(doc, 'asking for referrals', True)
+            # Para 74: letter_patients - "Dear Patient"
+            if 'letter_patients' in recruitment_source:
+                DocumentService._check_checkbox_by_text(doc, 'Dear Patient', True)
+            # Para 75: other - fill text if selected
+            if 'other' in recruitment_source and recruitment_source_other:
+                for para in doc.paragraphs:
+                    if 'other, specify' in para.text.lower() and 'source' not in para.text.lower():
+                        # Add the text to the specify field
+                        for run in para.runs:
+                            if '\u2002' in run.text or '     ' in run.text:
+                                run.text = recruitment_source_other
+                                break
+                        break
+
+        # Para 77: Flyers Yes/No (has both checkboxes)
+        if flyers_used:
+            for para in doc.paragraphs:
+                if 'flyers' in para.text.lower() and 'attach copy' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and flyers_used == 'no') or \
+                                               (checkbox_count == 1 and flyers_used == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Para 79: Verbal recruitment Yes/No
+        if verbal_used:
+            for para in doc.paragraphs:
+                if 'verbal' in para.text.lower() and 'script' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and verbal_used == 'no') or \
+                                               (checkbox_count == 1 and verbal_used == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Para 81: Electronic recruitment Yes/No
+        if electronic_used:
+            for para in doc.paragraphs:
+                if 'yes, describe' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                should_check = (checkbox_count == 0 and electronic_used == 'no') or \
+                                               (checkbox_count == 1 and electronic_used == 'yes')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                        # Fill description if yes
+                        if electronic_used == 'yes' and electronic_description:
+                            if '\u2002' in run.text or '     ' in run.text:
+                                run.text = electronic_description
+                    break
+
+        # Handle Section VI - Consent fields
+        consent_timing = flat_data.get('consent.timing', '')
+        consent_documents = flat_data.get('consent.documents_required', [])
+        consent_waiver = flat_data.get('consent.waiver_requested', [])
+        consent_inducement = flat_data.get('consent.inducement', '')
+
+        # Para 84: Consent timing (has 2 checkboxes: In conjunction / At a separate appointment)
+        if consent_timing:
+            for para in doc.paragraphs:
+                if 'relative to the performance' in para.text.lower():
+                    checkbox_count = 0
+                    for run in para.runs:
+                        ffData = run._r.find('.//' + qn('w:ffData'))
+                        if ffData is not None:
+                            checkbox = ffData.find(qn('w:checkBox'))
+                            if checkbox is not None:
+                                existing = checkbox.find(qn('w:checked'))
+                                if existing is not None:
+                                    checkbox.remove(existing)
+                                # First checkbox = conjunction, second = separate
+                                should_check = (checkbox_count == 0 and consent_timing == 'conjunction') or \
+                                               (checkbox_count == 1 and consent_timing == 'separate')
+                                if should_check:
+                                    checked_elem = etree.SubElement(checkbox, qn('w:checked'))
+                                    checked_elem.set(qn('w:val'), '1')
+                                checkbox_count += 1
+                    break
+
+        # Consent documents checkboxes (Para 86-90)
+        if isinstance(consent_documents, list):
+            doc_labels = {
+                'informed_consent': 'informed consent document',
+                'parent_permission': 'consent/permission of parent',
+                'assent_13_17': '13 – 17 yrs',
+                'assent_7_12': '7 – 12 yrs',
+                'hipaa_auth': 'authorization for use of protected health'
+            }
+            for doc_type, search_text in doc_labels.items():
+                if doc_type in consent_documents:
+                    DocumentService._check_checkbox_by_text(doc, search_text, True)
+
+        # Consent waiver checkboxes (Para 92-94)
+        if isinstance(consent_waiver, list):
+            waiver_labels = {
+                'waiver_consent': 'waiver of consent',
+                'waiver_written': 'waiver of written consent',
+                'waiver_signed': 'waiver of signed consent',
+                'waiver_hipaa': 'waiver of hipaa'
+            }
+            for waiver_type, search_text in waiver_labels.items():
+                if waiver_type in consent_waiver:
+                    DocumentService._check_checkbox_by_text(doc, search_text, True)
+
+        # Inducement text
+        if consent_inducement:
+            for para in doc.paragraphs:
+                if 'inducement' in para.text.lower() and 'offered' in para.text.lower():
+                    # Find text field placeholder and fill it
+                    for run in para.runs:
+                        if '\u2002' in run.text or '     ' in run.text:
+                            run.text = consent_inducement
+                            break
+                    break
 
         # Fill each field
         for field_id, value in flat_data.items():

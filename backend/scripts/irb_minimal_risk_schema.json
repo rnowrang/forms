@@ -74,10 +74,14 @@
         },
         {
             "id": "investigator.pi_obtaining_consent",
-            "type": "checkbox",
+            "type": "radio",
             "label": "PI Obtaining Consent?",
             "section_id": "sec_investigator_info",
             "order": 1,
+            "options": [
+                {"value": "yes", "label": "Yes"},
+                {"value": "no", "label": "No"}
+            ],
             "anchor": {
                 "type": "table_cell",
                 "table_index": 0,
@@ -128,7 +132,7 @@
         },
         {
             "id": "investigator.pi_faculty_status",
-            "type": "select",
+            "type": "radio",
             "label": "Faculty Status",
             "section_id": "sec_investigator_info",
             "order": 5,
@@ -167,12 +171,13 @@
                     {"id": "phone", "label": "Phone", "type": "text", "width": "15%"},
                     {"id": "email", "label": "E-Mail", "type": "email", "width": "20%"},
                     {"id": "role", "label": "Role on Study", "type": "text", "width": "15%"}
-                ]
+                ],
+                "column_mapping": [0, 1, 2, 4, 5, 6]
             }
         },
         {
             "id": "study.initiated_by",
-            "type": "select",
+            "type": "radio",
             "label": "Study Initiated By",
             "section_id": "sec_study_info",
             "order": 0,
@@ -186,7 +191,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "study initiated by"
+                "paragraph_contains": "study initiated by"
             }
         },
         {
@@ -194,11 +199,12 @@
             "type": "text",
             "label": "Other - Specify",
             "section_id": "sec_study_info",
-            "order": 1
+            "order": 1,
+            "visible": false
         },
         {
             "id": "study.associated_irb",
-            "type": "select",
+            "type": "radio",
             "label": "Associated with another IRB-approved study?",
             "section_id": "sec_study_info",
             "order": 2,
@@ -208,7 +214,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "associated with another IRB"
+                "paragraph_contains": "associated with another IRB"
             }
         },
         {
@@ -216,11 +222,12 @@
             "type": "text",
             "label": "Associated IRB Number",
             "section_id": "sec_study_info",
-            "order": 3
+            "order": 3,
+            "visible": false
         },
         {
             "id": "study.scro_required",
-            "type": "select",
+            "type": "radio",
             "label": "SCRO submission required?",
             "section_id": "sec_study_info",
             "order": 4,
@@ -230,12 +237,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Submission to SCRO"
+                "paragraph_contains": "Submission to SCRO"
             }
         },
         {
             "id": "study.ibc_required",
-            "type": "select",
+            "type": "radio",
             "label": "Institutional Biosafety Committee (IBC) screening required?",
             "section_id": "sec_study_info",
             "order": 5,
@@ -245,7 +252,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Biosafety Committee"
+                "paragraph_contains": "Biosafety Committee"
             }
         },
         {
@@ -268,12 +275,13 @@
                     {"id": "number_lluh", "label": "Number at LLUH", "type": "text", "width": "20%"},
                     {"id": "number_total", "label": "Number Study-wide", "type": "text", "width": "25%"},
                     {"id": "age_range", "label": "Age Range", "type": "text", "width": "25%"}
-                ]
+                ],
+                "column_mapping": [0, 1, 2, 3]
             }
         },
         {
             "id": "population.classification",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Classification of Subjects",
             "section_id": "sec_population",
             "order": 1,
@@ -301,7 +309,7 @@
             "required": true,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Criteria for inclusion"
+                "paragraph_contains": "Criteria for inclusion"
             }
         },
         {
@@ -312,12 +320,12 @@
             "order": 3,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Criteria for exclusion"
+                "paragraph_contains": "Criteria for exclusion"
             }
         },
         {
             "id": "recruitment.source",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Source of subjects",
             "section_id": "sec_recruitment",
             "order": 0,
@@ -330,7 +338,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Source of subjects"
+                "paragraph_contains": "Source of subjects"
             }
         },
         {
@@ -338,11 +346,12 @@
             "type": "textarea",
             "label": "Other source - specify",
             "section_id": "sec_recruitment",
-            "order": 1
+            "order": 1,
+            "visible": false
         },
         {
             "id": "recruitment.flyers_used",
-            "type": "select",
+            "type": "radio",
             "label": "Will recruitment use flyers, posters, hand-outs?",
             "section_id": "sec_recruitment",
             "order": 2,
@@ -352,12 +361,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "flyers, posters"
+                "paragraph_contains": "flyers, posters"
             }
         },
         {
             "id": "recruitment.verbal_used",
-            "type": "select",
+            "type": "radio",
             "label": "Will recruitment require verbal (including telephone) recruitment?",
             "section_id": "sec_recruitment",
             "order": 3,
@@ -367,12 +376,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "verbal"
+                "paragraph_contains": "verbal"
             }
         },
         {
             "id": "recruitment.electronic_used",
-            "type": "select",
+            "type": "radio",
             "label": "Will recruitment involve electronic (web or e-mail) recruiting?",
             "section_id": "sec_recruitment",
             "order": 4,
@@ -382,7 +391,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "electronic"
+                "paragraph_contains": "electronic"
             }
         },
         {
@@ -390,7 +399,8 @@
             "type": "textarea",
             "label": "Electronic recruitment description",
             "section_id": "sec_recruitment",
-            "order": 5
+            "order": 5,
+            "visible": false
         },
         {
             "id": "consent.plan",
@@ -401,7 +411,7 @@
             "required": true,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "plan for obtaining consent"
+                "paragraph_contains": "plan for obtaining consent"
             }
         },
         {
@@ -412,7 +422,7 @@
             "order": 7,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Who will conduct consent"
+                "paragraph_contains": "Who will conduct consent"
             }
         },
         {
@@ -423,12 +433,12 @@
             "order": 8,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "location will be used"
+                "paragraph_contains": "location will be used"
             }
         },
         {
             "id": "consent.documents_required",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Which consent documents are required?",
             "section_id": "sec_recruitment",
             "order": 9,
@@ -444,12 +454,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "consent documents are required"
+                "paragraph_contains": "consent documents are required"
             }
         },
         {
             "id": "consent.payments",
-            "type": "select",
+            "type": "radio",
             "label": "Will payments/gifts be offered to subjects?",
             "section_id": "sec_recruitment",
             "order": 10,
@@ -459,7 +469,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "payments/gifts"
+                "paragraph_contains": "payments/gifts"
             }
         },
         {
@@ -467,7 +477,8 @@
             "type": "textarea",
             "label": "Describe the type, schedule and amount of payment/gift",
             "section_id": "sec_recruitment",
-            "order": 11
+            "order": 11,
+            "visible": false
         },
         {
             "id": "methods.venue",
@@ -477,12 +488,12 @@
             "order": 0,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "venue"
+                "paragraph_contains": "venue"
             }
         },
         {
             "id": "methods.procedures",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Study-related procedures",
             "section_id": "sec_methods_risks",
             "order": 1,
@@ -503,7 +514,7 @@
         },
         {
             "id": "methods.deception_used",
-            "type": "select",
+            "type": "radio",
             "label": "Will deception be used?",
             "section_id": "sec_methods_risks",
             "order": 2,
@@ -513,7 +524,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "deception"
+                "paragraph_contains": "deception"
             }
         },
         {
@@ -521,14 +532,16 @@
             "type": "textarea",
             "label": "Justify use of deception",
             "section_id": "sec_methods_risks",
-            "order": 3
+            "order": 3,
+            "visible": false
         },
         {
             "id": "methods.debriefing_plan",
             "type": "textarea",
             "label": "Describe plans for debriefing",
             "section_id": "sec_methods_risks",
-            "order": 4
+            "order": 4,
+            "visible": false
         },
         {
             "id": "risks.list",
@@ -539,12 +552,12 @@
             "required": true,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "List the risks"
+                "paragraph_contains": "List the risks"
             }
         },
         {
             "id": "risks.emotional_stress",
-            "type": "select",
+            "type": "radio",
             "label": "Is there potential for emotional stress, boredom, or fatigue?",
             "section_id": "sec_risks",
             "order": 1,
@@ -554,12 +567,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "emotional stress"
+                "paragraph_contains": "emotional stress"
             }
         },
         {
             "id": "risks.risk_level",
-            "type": "select",
+            "type": "radio",
             "label": "Risk Level",
             "section_id": "sec_risks",
             "order": 2,
@@ -570,16 +583,17 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Minimal risk"
+                "paragraph_contains": "Minimal risk"
             }
         },
         {
             "id": "risks.children_risk_level",
-            "type": "select",
+            "type": "radio",
             "label": "For studies involving children, estimate the magnitude of potential harm",
             "section_id": "sec_risks",
             "order": 3,
             "options": [
+                {"value": "not_applicable", "label": "N/A - No children in study"},
                 {"value": "minimal", "label": "Minimal risk"},
                 {"value": "greater_benefit", "label": "Greater than minimal risk, but holds prospect of direct benefit"},
                 {"value": "moderate", "label": "Moderate risk"},
@@ -587,12 +601,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "studies involving children"
+                "paragraph_contains": "studies involving children"
             }
         },
         {
             "id": "risks.certificate_confidentiality",
-            "type": "select",
+            "type": "radio",
             "label": "Certificate of confidentiality requested?",
             "section_id": "sec_risks",
             "order": 4,
@@ -602,7 +616,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Certificate of confidentiality"
+                "paragraph_contains": "Certificate of confidentiality"
             }
         },
         {
@@ -613,7 +627,7 @@
             "order": 0,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "benefits to subjects"
+                "paragraph_contains": "benefits to subjects"
             }
         },
         {
@@ -625,12 +639,12 @@
             "required": true,
             "anchor": {
                 "type": "paragraph",
-                "search_text": "benefits to humanity"
+                "paragraph_contains": "benefits to humanity"
             }
         },
         {
             "id": "confidentiality.electronic_storage",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Electronic data storage methods",
             "section_id": "sec_confidentiality",
             "order": 0,
@@ -643,7 +657,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Password protection"
+                "paragraph_contains": "Password protection"
             }
         },
         {
@@ -651,11 +665,12 @@
             "type": "textarea",
             "label": "If unable to secure data as indicated, briefly summarize reason",
             "section_id": "sec_confidentiality",
-            "order": 1
+            "order": 1,
+            "visible": false
         },
         {
             "id": "confidentiality.electronic_transmittal",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Electronic data transmittal methods",
             "section_id": "sec_confidentiality",
             "order": 2,
@@ -667,12 +682,12 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Email"
+                "paragraph_contains": "Email"
             }
         },
         {
             "id": "confidentiality.hardcopy_stored",
-            "type": "select",
+            "type": "radio",
             "label": "Will research data be stored in hard copy format?",
             "section_id": "sec_confidentiality",
             "order": 3,
@@ -682,15 +697,16 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "hard copy format"
+                "paragraph_contains": "hard copy format"
             }
         },
         {
             "id": "confidentiality.hardcopy_storage",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Hard copy storage methods",
             "section_id": "sec_confidentiality",
             "order": 4,
+            "visible": false,
             "options": [
                 {"value": "locked_suite", "label": "Locked suite"},
                 {"value": "locked_office", "label": "Locked office"},
@@ -700,7 +716,7 @@
         },
         {
             "id": "confidentiality.hardcopy_transmittal",
-            "type": "select",
+            "type": "radio",
             "label": "Will hard copy data be transmitted or transported?",
             "section_id": "sec_confidentiality",
             "order": 5,
@@ -710,15 +726,16 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "transmitted or transported"
+                "paragraph_contains": "transmitted or transported"
             }
         },
         {
             "id": "confidentiality.hardcopy_transmittal_methods",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "Hard copy transmittal methods",
             "section_id": "sec_confidentiality",
             "order": 6,
+            "visible": false,
             "options": [
                 {"value": "fax", "label": "Fax with confidentiality cover sheet"},
                 {"value": "courier", "label": "Courier in sealed envelope"},
@@ -732,7 +749,7 @@
         },
         {
             "id": "confidentiality.collecting_health_info",
-            "type": "select",
+            "type": "radio",
             "label": "Are you collecting health information?",
             "section_id": "sec_confidentiality",
             "order": 7,
@@ -742,30 +759,32 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "collecting health information"
+                "paragraph_contains": "collecting health information"
             }
         },
         {
             "id": "confidentiality.phi_shared",
-            "type": "select",
+            "type": "radio",
             "label": "Will Protected Health Information (PHI) be shared outside LLUH?",
             "section_id": "sec_confidentiality",
             "order": 8,
+            "visible": false,
             "options": [
                 {"value": "no", "label": "No, no PHI will be shared outside LLUH"},
                 {"value": "yes", "label": "Yes (requires Authorization or waiver)"}
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "PHI"
+                "paragraph_contains": "PHI"
             }
         },
         {
             "id": "confidentiality.phi_shared_with",
-            "type": "checkbox_group",
+            "type": "checkbox",
             "label": "PHI will be shared with",
             "section_id": "sec_confidentiality",
             "order": 9,
+            "visible": false,
             "options": [
                 {"value": "statistician", "label": "Statistician"},
                 {"value": "consultant", "label": "Consultant(s) or Contractor(s)"},
@@ -781,10 +800,11 @@
         },
         {
             "id": "confidentiality.phi_shared_format",
-            "type": "select",
+            "type": "radio",
             "label": "If PHI will be shared, what format?",
             "section_id": "sec_confidentiality",
             "order": 10,
+            "visible": false,
             "options": [
                 {"value": "phi_given", "label": "Recipient will be given PHI"},
                 {"value": "linked_code", "label": "Recipient will be given data with a linked code"},
@@ -793,7 +813,7 @@
             ],
             "anchor": {
                 "type": "paragraph",
-                "search_text": "Recipient will be given"
+                "paragraph_contains": "Recipient will be given"
             }
         },
         {
@@ -802,109 +822,218 @@
             "label": "I certify that all information provided is accurate and complete",
             "section_id": "sec_signatures",
             "order": 0,
-            "required": true
+            "required": true,
+            "options": [
+                {"value": "certified", "label": "I certify that all information provided is accurate and complete"}
+            ]
         }
     ],
     "rules": [
         {
             "id": "rule_initiated_other",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "study.initiated_by",
-                "operator": "equals",
-                "value": "other"
-            },
-            "target_field_ids": ["study.initiated_other"]
+            "conditions": [
+                {
+                    "field": "study.initiated_by",
+                    "operator": "equals",
+                    "value": "other"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "study.initiated_other"},
+                {"action": "require", "field": "study.initiated_other"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "study.initiated_other"},
+                {"action": "optional", "field": "study.initiated_other"}
+            ]
         },
         {
             "id": "rule_associated_irb",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "study.associated_irb",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["study.associated_irb_number"]
+            "conditions": [
+                {
+                    "field": "study.associated_irb",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "study.associated_irb_number"},
+                {"action": "require", "field": "study.associated_irb_number"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "study.associated_irb_number"},
+                {"action": "optional", "field": "study.associated_irb_number"}
+            ]
         },
         {
             "id": "rule_recruitment_source_other",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "recruitment.source",
-                "operator": "contains",
-                "value": "other"
-            },
-            "target_field_ids": ["recruitment.source_other"]
+            "conditions": [
+                {
+                    "field": "recruitment.source",
+                    "operator": "contains",
+                    "value": "other"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "recruitment.source_other"},
+                {"action": "require", "field": "recruitment.source_other"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "recruitment.source_other"},
+                {"action": "optional", "field": "recruitment.source_other"}
+            ]
         },
         {
             "id": "rule_electronic_recruitment",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "recruitment.electronic_used",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["recruitment.electronic_description"]
+            "conditions": [
+                {
+                    "field": "recruitment.electronic_used",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "recruitment.electronic_description"},
+                {"action": "require", "field": "recruitment.electronic_description"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "recruitment.electronic_description"},
+                {"action": "optional", "field": "recruitment.electronic_description"}
+            ]
         },
         {
             "id": "rule_payments",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "consent.payments",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["consent.payment_description"]
+            "conditions": [
+                {
+                    "field": "consent.payments",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "consent.payment_description"},
+                {"action": "require", "field": "consent.payment_description"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "consent.payment_description"},
+                {"action": "optional", "field": "consent.payment_description"}
+            ]
         },
         {
             "id": "rule_deception",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "methods.deception_used",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["methods.deception_justification", "methods.debriefing_plan"]
+            "conditions": [
+                {
+                    "field": "methods.deception_used",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "methods.deception_justification"},
+                {"action": "show", "field": "methods.debriefing_plan"},
+                {"action": "require", "field": "methods.deception_justification"},
+                {"action": "require", "field": "methods.debriefing_plan"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "methods.deception_justification"},
+                {"action": "hide", "field": "methods.debriefing_plan"},
+                {"action": "optional", "field": "methods.deception_justification"},
+                {"action": "optional", "field": "methods.debriefing_plan"}
+            ]
+        },
+        {
+            "id": "rule_electronic_storage_other",
+            "conditions": [
+                {
+                    "field": "confidentiality.electronic_storage",
+                    "operator": "contains",
+                    "value": "other"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "confidentiality.electronic_unable_reason"},
+                {"action": "require", "field": "confidentiality.electronic_unable_reason"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "confidentiality.electronic_unable_reason"},
+                {"action": "optional", "field": "confidentiality.electronic_unable_reason"}
+            ]
         },
         {
             "id": "rule_hardcopy_stored",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "confidentiality.hardcopy_stored",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["confidentiality.hardcopy_storage"]
+            "conditions": [
+                {
+                    "field": "confidentiality.hardcopy_stored",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "confidentiality.hardcopy_storage"},
+                {"action": "require", "field": "confidentiality.hardcopy_storage"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "confidentiality.hardcopy_storage"},
+                {"action": "optional", "field": "confidentiality.hardcopy_storage"}
+            ]
         },
         {
             "id": "rule_hardcopy_transmittal",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "confidentiality.hardcopy_transmittal",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["confidentiality.hardcopy_transmittal_methods"]
+            "conditions": [
+                {
+                    "field": "confidentiality.hardcopy_transmittal",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "confidentiality.hardcopy_transmittal_methods"},
+                {"action": "require", "field": "confidentiality.hardcopy_transmittal_methods"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "confidentiality.hardcopy_transmittal_methods"},
+                {"action": "optional", "field": "confidentiality.hardcopy_transmittal_methods"}
+            ]
         },
         {
             "id": "rule_health_info",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "confidentiality.collecting_health_info",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["confidentiality.phi_shared"]
+            "conditions": [
+                {
+                    "field": "confidentiality.collecting_health_info",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "confidentiality.phi_shared"},
+                {"action": "require", "field": "confidentiality.phi_shared"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "confidentiality.phi_shared"},
+                {"action": "optional", "field": "confidentiality.phi_shared"}
+            ]
         },
         {
             "id": "rule_phi_shared",
-            "type": "show_hide",
-            "condition": {
-                "field_id": "confidentiality.phi_shared",
-                "operator": "equals",
-                "value": "yes"
-            },
-            "target_field_ids": ["confidentiality.phi_shared_with", "confidentiality.phi_shared_format"]
+            "conditions": [
+                {
+                    "field": "confidentiality.phi_shared",
+                    "operator": "equals",
+                    "value": "yes"
+                }
+            ],
+            "then_actions": [
+                {"action": "show", "field": "confidentiality.phi_shared_with"},
+                {"action": "show", "field": "confidentiality.phi_shared_format"},
+                {"action": "require", "field": "confidentiality.phi_shared_with"},
+                {"action": "require", "field": "confidentiality.phi_shared_format"}
+            ],
+            "else_actions": [
+                {"action": "hide", "field": "confidentiality.phi_shared_with"},
+                {"action": "hide", "field": "confidentiality.phi_shared_format"},
+                {"action": "optional", "field": "confidentiality.phi_shared_with"},
+                {"action": "optional", "field": "confidentiality.phi_shared_format"}
+            ]
         }
     ]
 }
