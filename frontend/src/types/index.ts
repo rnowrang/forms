@@ -24,6 +24,17 @@ export interface TemplateSchemaField {
   indent?: number  // Indentation level (0, 1, 2) for nested/related fields
   group_start?: string  // Start a new visual group with this label
   group_end?: boolean  // End the current visual group
+  // Table layout for fixed tables
+  table_group?: string  // Group ID for fields that should be rendered together in a table
+  table_row?: number  // Row index in the table (0-based)
+  table_col?: number  // Column index in the table (0-based)
+  table_config?: {  // Only on first field of table group
+    columns: { id: string; label: string }[]
+    rows: { id: string; label: string }[]
+  }
+  // Column layout for side-by-side fields
+  column_group?: string  // Group ID for fields displayed in columns
+  column_index?: number  // Which column (0, 1, 2, etc.)
 }
 
 export interface TemplateSchemaSection {

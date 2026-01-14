@@ -631,81 +631,249 @@
             ]
         },
         {
-            "id": "population.subjects",
-            "type": "repeatable",
-            "label": "Subject Numbers",
+            "id": "population.healthy_llu",
+            "type": "text",
+            "label": "Healthy (normal) subjects - Number at LLU",
             "section_id": "sec_population",
             "order": 0,
-            "anchor": {
-                "type": "table",
-                "table_index": 1,
-                "start_row": 1
-            },
-            "repeatable_config": {
-                "min_rows": 1,
-                "max_rows": 3,
-                "add_button_text": "Add Subject Category",
+            "group_start": "A. Subject Numbers",
+            "table_group": "subject_numbers",
+            "table_row": 0,
+            "table_col": 0,
+            "table_config": {
                 "columns": [
-                    {"id": "type", "label": "Subjects", "type": "text", "width": "40%"},
-                    {"id": "number_llu", "label": "Number at LLU", "type": "text", "width": "20%"},
-                    {"id": "number_total", "label": "Number Study-wide", "type": "text", "width": "20%"},
-                    {"id": "age_range", "label": "Age Range", "type": "text", "width": "20%"}
+                    {"id": "llu", "label": "Number at LLU"},
+                    {"id": "studywide", "label": "Number Study-wide"},
+                    {"id": "age_range", "label": "Age Range"}
                 ],
-                "column_mapping": [0, 1, 2, 3]
+                "rows": [
+                    {"id": "healthy", "label": "Healthy (normal) subjects"},
+                    {"id": "patients", "label": "Patients"},
+                    {"id": "total", "label": "Total Number"}
+                ]
+            },
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 1,
+                "column_index": 1
+            }
+        },
+        {
+            "id": "population.healthy_studywide",
+            "type": "text",
+            "label": "Healthy (normal) subjects - Number Study-wide",
+            "section_id": "sec_population",
+            "order": 1,
+            "table_group": "subject_numbers",
+            "table_row": 0,
+            "table_col": 1,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 1,
+                "column_index": 2
+            }
+        },
+        {
+            "id": "population.healthy_age_range",
+            "type": "text",
+            "label": "Healthy (normal) subjects - Age Range",
+            "section_id": "sec_population",
+            "order": 2,
+            "table_group": "subject_numbers",
+            "table_row": 0,
+            "table_col": 2,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 1,
+                "column_index": 3
+            }
+        },
+        {
+            "id": "population.patients_llu",
+            "type": "text",
+            "label": "Patients - Number at LLU",
+            "section_id": "sec_population",
+            "order": 3,
+            "table_group": "subject_numbers",
+            "table_row": 1,
+            "table_col": 0,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 2,
+                "column_index": 1
+            }
+        },
+        {
+            "id": "population.patients_studywide",
+            "type": "text",
+            "label": "Patients - Number Study-wide",
+            "section_id": "sec_population",
+            "order": 4,
+            "table_group": "subject_numbers",
+            "table_row": 1,
+            "table_col": 1,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 2,
+                "column_index": 2
+            }
+        },
+        {
+            "id": "population.patients_age_range",
+            "type": "text",
+            "label": "Patients - Age Range",
+            "section_id": "sec_population",
+            "order": 5,
+            "table_group": "subject_numbers",
+            "table_row": 1,
+            "table_col": 2,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 2,
+                "column_index": 3
+            }
+        },
+        {
+            "id": "population.total_llu",
+            "type": "text",
+            "label": "Total Number - at LLU",
+            "section_id": "sec_population",
+            "order": 6,
+            "table_group": "subject_numbers",
+            "table_row": 2,
+            "table_col": 0,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 3,
+                "column_index": 1
+            }
+        },
+        {
+            "id": "population.total_studywide",
+            "type": "text",
+            "label": "Total Number - Study-wide",
+            "section_id": "sec_population",
+            "order": 7,
+            "table_group": "subject_numbers",
+            "table_row": 2,
+            "table_col": 1,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 3,
+                "column_index": 2
+            }
+        },
+        {
+            "id": "population.total_age_range",
+            "type": "text",
+            "label": "Total Number - Age Range",
+            "section_id": "sec_population",
+            "order": 8,
+            "table_group": "subject_numbers",
+            "table_row": 2,
+            "table_col": 2,
+            "anchor": {
+                "type": "table_cell",
+                "table_index": 1,
+                "row_index": 3,
+                "column_index": 3
             }
         },
         {
             "id": "population.vulnerable",
             "type": "checkbox",
-            "label": "Vulnerable Populations (check all that apply)",
+            "label": "Vulnerable Populations",
             "section_id": "sec_population",
-            "order": 1,
+            "order": 10,
+            "group_start": "B. Classification of Subjects (check all that apply)",
+            "column_group": "classification",
+            "column_index": 0,
             "options": [
                 {"value": "abortuses", "label": "Abortuses/Embryos"},
                 {"value": "diminished_capacity", "label": "Diminished decision-making capacity"},
+                {"value": "economically_disadvantaged", "label": "Economically disadvantaged"},
+                {"value": "educationally_disadvantaged", "label": "Educationally disadvantaged"},
                 {"value": "fetuses", "label": "Fetuses"},
-                {"value": "minors", "label": "Minors (under 18)"},
-                {"value": "neonates", "label": "Neonates (to 28 days)"},
+                {"value": "minors", "label": "Minors/Children (under 18 years of age)"},
+                {"value": "neonates", "label": "Neonates"},
                 {"value": "pregnant", "label": "Pregnant women"},
-                {"value": "prisoners", "label": "Prisoners"},
-                {"value": "terminally_ill", "label": "Terminally ill"}
+                {"value": "prisoners", "label": "Prisoners"}
             ]
         },
         {
             "id": "population.special",
             "type": "checkbox",
-            "label": "Special Populations (check all that apply)",
+            "label": "Special Populations",
             "section_id": "sec_population",
-            "order": 2,
+            "order": 11,
+            "column_group": "classification",
+            "column_index": 1,
             "options": [
                 {"value": "elderly", "label": "Elderly/aged"},
                 {"value": "illiterate", "label": "Illiterate"},
                 {"value": "institutionalized", "label": "Institutionalized"},
-                {"value": "patients", "label": "Patients"},
-                {"value": "students", "label": "Students"},
-                {"value": "non_english", "label": "Non-English speaking"}
+                {"value": "patients_inpatients", "label": "Patients: Inpatients"},
+                {"value": "patients_outpatients", "label": "Patients: Outpatients"},
+                {"value": "terminally_ill", "label": "Terminally ill patients"},
+                {"value": "traumatized", "label": "Traumatized"}
             ]
         },
         {
-            "id": "population.other",
-            "type": "checkbox",
-            "label": "Other Populations (check all that apply)",
+            "id": "population.special_other",
+            "type": "text",
+            "label": "Other, specify",
             "section_id": "sec_population",
-            "order": 3,
+            "order": 12,
+            "column_group": "classification",
+            "column_index": 1,
+            "placeholder": "Specify..."
+        },
+        {
+            "id": "population.other_populations",
+            "type": "checkbox",
+            "label": "Other Populations",
+            "section_id": "sec_population",
+            "order": 13,
+            "column_group": "classification",
+            "column_index": 2,
             "options": [
                 {"value": "employees", "label": "Employees"},
                 {"value": "female_only", "label": "Female (excludes males)"},
-                {"value": "healthy", "label": "Healthy (non-patient) subjects"},
-                {"value": "male_only", "label": "Male (excludes females)"}
+                {"value": "healthy", "label": "Healthy (non-patient)"},
+                {"value": "male_only", "label": "Male (excludes females)"},
+                {"value": "minorities", "label": "Minorities"},
+                {"value": "non_english", "label": "Non-English speaking populations"},
+                {"value": "physically_handicapped", "label": "Physically handicapped"},
+                {"value": "sda_cohort", "label": "Seventh-day Adventist cohort"},
+                {"value": "students", "label": "Students"}
             ]
+        },
+        {
+            "id": "population.other_populations_other",
+            "type": "text",
+            "label": "Other, specify",
+            "section_id": "sec_population",
+            "order": 14,
+            "column_group": "classification",
+            "column_index": 2,
+            "placeholder": "Specify..."
         },
         {
             "id": "population.inclusion_criteria",
             "type": "textarea",
             "label": "Criteria for inclusion of subjects",
             "section_id": "sec_population",
-            "order": 4,
+            "order": 15,
             "required": true,
+            "group_start": "C. Inclusion/Exclusion Criteria",
             "anchor": {
                 "type": "paragraph",
                 "paragraph_contains": "Criteria for inclusion"
@@ -716,7 +884,7 @@
             "type": "textarea",
             "label": "Criteria for exclusion of subjects (other than those opposite the inclusion criteria)",
             "section_id": "sec_population",
-            "order": 5,
+            "order": 16,
             "anchor": {
                 "type": "paragraph",
                 "paragraph_contains": "Criteria for exclusion"

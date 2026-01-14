@@ -353,42 +353,203 @@ export default function FormEditorPage() {
                 
                 {isExpanded && (
                   <div className="form-section-content space-y-6">
-                    {sectionFields.map((field: TemplateSchemaField, index: number) => {
-                      const indent = field.indent || 0
-                      const showGroupStart = field.group_start
-                      const showGroupEnd = field.group_end ||
-                        (index < sectionFields.length - 1 && sectionFields[index + 1].group_start)
+                    {(() => {
+                      // Group fields by table_group and column_group
+                      const tableGroups = new Map<string, TemplateSchemaField[]>()
+                      const columnGroups = new Map<string, TemplateSchemaField[]>()
+                      const renderedTableGroups = new Set<string>()
+                      const renderedColumnGroups = new Set<string>()
 
-                      return (
-                        <div key={field.id}>
-                          {/* Group header */}
-                          {showGroupStart && (
-                            <div className="text-sm font-medium text-surface-600 mb-3 mt-2 pb-1 border-b border-surface-200">
-                              {field.group_start}
+                      sectionFields.forEach((field: TemplateSchemaField) => {
+                        if (field.table_group) {
+                          if (!tableGroups.has(field.table_group)) {
+                            tableGroups.set(field.table_group, [])
+                          }
+                          tableGroups.get(field.table_group)!.push(field)
+                        }
+                        if (field.column_group) {
+                          if (!columnGroups.has(field.column_group)) {
+                            columnGroups.set(field.column_group, [])
+                          }
+                          columnGroups.get(field.column_group)!.push(field)
+                        }
+                      })
+
+                      return sectionFields.map((field: TemplateSchemaField, index: number) => {
+                        // If this field is part of a table group
+                        if (field.table_group) {
+                          // Only render the table once (when we hit the first field with table_config)
+                          if (renderedTableGroups.has(field.table_group)) {
+                            return null // Skip - already rendered as part of table
+                          }
+
+                          const tableFields = tableGroups.get(field.table_group) || []
+                          const configField = tableFields.find(f => f.table_config)
+
+                          if (!configField?.table_config) {
+                            return null
+                          }
+
+                          renderedTableGroups.add(field.table_group)
+                          const { columns, rows } = configField.table_config
+
+                          return (
+                            <div key={`table-${field.table_group}`}>
+                              {/* Group header */}
+                              {configField.group_start && (
+                                <div className="text-sm font-medium text-surface-600 mb-3 mt-2 pb-1 border-b border-surface-200">
+                                  {configField.group_start}
+                                </div>
+                              )}
+
+                              {/* Fixed table */}
+                              <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                  <thead>
+                                    <tr className="bg-surface-50">
+                                      <th className="px-3 py-2 text-left text-sm font-medium text-surface-700 border border-surface-200">
+                                        Subjects
+                                      </th>
+                                      {columns.map((col) => (
+                                        <th key={col.id} className="px-3 py-2 text-left text-sm font-medium text-surface-700 border border-surface-200">
+                                          {col.label}
+                                        </th>
+                                      ))}
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {rows.map((row, rowIndex) => (
+                                      <tr key={row.id}>
+                                        <td className="px-3 py-2 text-sm text-surface-700 border border-surface-200 bg-surface-50 font-medium">
+                                          {row.label}
+                                        </td>
+                                        {columns.map((col, colIndex) => {
+                                          const cellField = tableFields.find(
+                                            f => f.table_row === rowIndex && f.table_col === colIndex
+                                          )
+                                          if (!cellField) return <td key={col.id} className="border border-surface-200 p-1" />
+
+                                          return (
+                                            <td key={col.id} className="border border-surface-200 p-1">
+                                              <Controller
+                                                name={cellField.id}
+                                                control={control}
+                                                render={({ field: { value, onChange: formOnChange } }) => (
+                                                  <input
+                                                    type="text"
+                                                    value={value || ''}
+                                                    onChange={(e) => {
+                                                      formOnChange(e.target.value)
+                                                      handleFieldChange(cellField.id, e.target.value, cellField.label)
+                                                    }}
+                                                    className="w-full px-2 py-1 text-sm border-0 focus:ring-1 focus:ring-primary-500 rounded"
+                                                    placeholder={col.label}
+                                                  />
+                                                )}
+                                              />
+                                            </td>
+                                          )
+                                        })}
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
                             </div>
-                          )}
+                          )
+                        }
 
-                          {/* Field with indentation */}
-                          <div
-                            className={`
-                              ${indent > 0 ? 'ml-6 pl-4 border-l-2 border-surface-200' : ''}
-                              ${indent > 1 ? 'ml-12' : ''}
-                            `}
-                          >
-                            <FormField
-                              field={field}
-                              control={control}
-                              onChange={(value) => handleFieldChange(field.id, value, field.label)}
-                            />
+                        // If this field is part of a column group
+                        if (field.column_group) {
+                          if (renderedColumnGroups.has(field.column_group)) {
+                            return null // Skip - already rendered
+                          }
+
+                          const colFields = columnGroups.get(field.column_group) || []
+                          const firstField = colFields.find(f => f.group_start)
+                          renderedColumnGroups.add(field.column_group)
+
+                          // Group fields by column_index
+                          const columnMap = new Map<number, TemplateSchemaField[]>()
+                          colFields.forEach(f => {
+                            const colIdx = f.column_index ?? 0
+                            if (!columnMap.has(colIdx)) {
+                              columnMap.set(colIdx, [])
+                            }
+                            columnMap.get(colIdx)!.push(f)
+                          })
+
+                          const columnCount = Math.max(...Array.from(columnMap.keys())) + 1
+
+                          return (
+                            <div key={`columns-${field.column_group}`}>
+                              {/* Group header */}
+                              {firstField?.group_start && (
+                                <div className="text-sm font-medium text-surface-600 mb-3 mt-2 pb-1 border-b border-surface-200">
+                                  {firstField.group_start}
+                                </div>
+                              )}
+
+                              {/* Multi-column layout */}
+                              <div className={`grid gap-4 ${columnCount === 3 ? 'grid-cols-1 md:grid-cols-3' : columnCount === 2 ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'}`}>
+                                {Array.from({ length: columnCount }, (_, colIdx) => {
+                                  const fieldsInCol = columnMap.get(colIdx) || []
+                                  return (
+                                    <div key={colIdx} className="border border-surface-200 rounded-lg p-3 bg-surface-50/50">
+                                      {fieldsInCol.map((colField) => (
+                                        <div key={colField.id} className="mb-3 last:mb-0">
+                                          <FormField
+                                            field={colField}
+                                            control={control}
+                                            onChange={(value) => handleFieldChange(colField.id, value, colField.label)}
+                                          />
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        // Regular field rendering
+                        const indent = field.indent || 0
+                        const showGroupStart = field.group_start
+                        const showGroupEnd = field.group_end ||
+                          (index < sectionFields.length - 1 && sectionFields[index + 1].group_start)
+
+                        return (
+                          <div key={field.id}>
+                            {/* Group header */}
+                            {showGroupStart && (
+                              <div className="text-sm font-medium text-surface-600 mb-3 mt-2 pb-1 border-b border-surface-200">
+                                {field.group_start}
+                              </div>
+                            )}
+
+                            {/* Field with indentation */}
+                            <div
+                              className={`
+                                ${indent > 0 ? 'ml-6 pl-4 border-l-2 border-surface-200' : ''}
+                                ${indent > 1 ? 'ml-12' : ''}
+                              `}
+                            >
+                              <FormField
+                                field={field}
+                                control={control}
+                                onChange={(value) => handleFieldChange(field.id, value, field.label)}
+                              />
+                            </div>
+
+                            {/* Group end spacing */}
+                            {showGroupEnd && (
+                              <div className="mt-4 mb-2" />
+                            )}
                           </div>
-
-                          {/* Group end spacing */}
-                          {showGroupEnd && (
-                            <div className="mt-4 mb-2" />
-                          )}
-                        </div>
-                      )
-                    })}
+                        )
+                      })
+                    })()}
                   </div>
                 )}
               </div>
