@@ -39,33 +39,27 @@
             "collapsible": true
         },
         {
-            "id": "sec_recruitment",
-            "title": "VI. Recruitment & Consent",
-            "order": 6,
-            "collapsible": true
-        },
-        {
             "id": "sec_methods_risks",
             "title": "VII. Subject-Related Methods and Risks",
-            "order": 7,
+            "order": 6,
             "collapsible": true
         },
         {
             "id": "sec_benefits",
             "title": "VIII. Benefits",
-            "order": 8,
+            "order": 7,
             "collapsible": true
         },
         {
             "id": "sec_confidentiality",
             "title": "IX. Confidentiality and Data Security",
-            "order": 9,
+            "order": 8,
             "collapsible": true
         },
         {
             "id": "sec_signatures",
             "title": "X. Supporting Signatures",
-            "order": 10,
+            "order": 9,
             "collapsible": true
         }
     ],
@@ -894,8 +888,9 @@
             "id": "recruitment.source",
             "type": "checkbox",
             "label": "Source of subjects",
-            "section_id": "sec_recruitment",
-            "order": 0,
+            "section_id": "sec_population",
+            "order": 20,
+            "group_start": "E. Recruitment Plan",
             "options": [
                 {"value": "own_patients", "label": "PI/collaborators will recruit his/her/their own patients/clients/students/employees"},
                 {"value": "letter_referrals", "label": "PI will send an IRB-approved letter to colleagues asking for referrals"},
@@ -907,16 +902,17 @@
             "id": "recruitment.source_other",
             "type": "textarea",
             "label": "Other source - specify",
-            "section_id": "sec_recruitment",
-            "order": 1,
-            "visible": false
+            "section_id": "sec_population",
+            "order": 21,
+            "visible": false,
+            "indent": 1
         },
         {
             "id": "recruitment.flyers_used",
             "type": "radio",
             "label": "Will recruitment require use of flyers, posters, hand-outs, or other forms of advertising?",
-            "section_id": "sec_recruitment",
-            "order": 2,
+            "section_id": "sec_population",
+            "order": 22,
             "options": [
                 {"value": "no", "label": "No"},
                 {"value": "yes", "label": "Yes - Attach copy for IRB review/approval"}
@@ -926,8 +922,8 @@
             "id": "recruitment.verbal_used",
             "type": "radio",
             "label": "Will recruitment require verbal (including telephone) recruitment?",
-            "section_id": "sec_recruitment",
-            "order": 3,
+            "section_id": "sec_population",
+            "order": 23,
             "options": [
                 {"value": "no", "label": "No"},
                 {"value": "yes", "label": "Yes - Attach script (See Phone Script Elements)"}
@@ -937,8 +933,8 @@
             "id": "recruitment.electronic_used",
             "type": "radio",
             "label": "Will recruitment involve electronic (web or e-mail) recruiting?",
-            "section_id": "sec_recruitment",
-            "order": 4,
+            "section_id": "sec_population",
+            "order": 24,
             "options": [
                 {"value": "no", "label": "No"},
                 {"value": "yes", "label": "Yes"}
@@ -948,17 +944,19 @@
             "id": "recruitment.electronic_description",
             "type": "textarea",
             "label": "Describe electronic recruitment method",
-            "section_id": "sec_recruitment",
-            "order": 5,
-            "visible": false
+            "section_id": "sec_population",
+            "order": 25,
+            "visible": false,
+            "indent": 1
         },
         {
             "id": "consent.plan",
             "type": "textarea",
             "label": "Describe your plan for obtaining consent",
-            "section_id": "sec_recruitment",
-            "order": 6,
+            "section_id": "sec_population",
+            "order": 30,
             "required": true,
+            "group_start": "F. Consent Plan",
             "anchor": {
                 "type": "paragraph",
                 "paragraph_contains": "plan for obtaining consent"
@@ -968,8 +966,8 @@
             "id": "consent.location",
             "type": "text",
             "label": "What location will be used for the subject to sign the consent?",
-            "section_id": "sec_recruitment",
-            "order": 7,
+            "section_id": "sec_population",
+            "order": 31,
             "anchor": {
                 "type": "paragraph",
                 "paragraph_contains": "location will be used for the subject"
@@ -979,8 +977,8 @@
             "id": "consent.timing",
             "type": "radio",
             "label": "Relative to the performance of research interventions, is consent obtained:",
-            "section_id": "sec_recruitment",
-            "order": 8,
+            "section_id": "sec_population",
+            "order": 32,
             "options": [
                 {"value": "conjunction", "label": "In conjunction with the performance of research interventions"},
                 {"value": "separate", "label": "At a separate appointment from the performance of research interventions"}
@@ -990,8 +988,8 @@
             "id": "consent.documents_required",
             "type": "checkbox",
             "label": "Which consent documents are required? (check all that apply)",
-            "section_id": "sec_recruitment",
-            "order": 9,
+            "section_id": "sec_population",
+            "order": 33,
             "options": [
                 {"value": "informed_consent", "label": "Informed Consent Document(s)"},
                 {"value": "parent_permission", "label": "Consent/Permission of Parent/Guardian"},
@@ -1004,8 +1002,8 @@
             "id": "consent.waiver_requested",
             "type": "checkbox",
             "label": "If a consent waiver is requested, select one of the following:",
-            "section_id": "sec_recruitment",
-            "order": 10,
+            "section_id": "sec_population",
+            "order": 34,
             "options": [
                 {"value": "waiver_consent", "label": "Waiver of consent"},
                 {"value": "waiver_written", "label": "Waiver of written consent (Provide text of verbal consent)"},
@@ -1017,8 +1015,9 @@
             "id": "consent.inducement",
             "type": "textarea",
             "label": "Amount of inducement being offered to the subjects, if any (include plan for pro-rated payment, if appropriate)",
-            "section_id": "sec_recruitment",
-            "order": 11
+            "section_id": "sec_population",
+            "order": 40,
+            "group_start": "G. Amount of Inducement"
         },
         {
             "id": "methods.location",
