@@ -413,34 +413,52 @@ class DocumentService:
                                     checkbox_count += 1
                         break
 
-        # Handle Section V.D - Ionizing Radiation
+        # Handle Section V.D - Ionizing Radiation (nested checkboxes in paragraphs 35-45)
+        # Structure:
+        # Para 35: No (main) / Para 36: Yes (main)
+        # Para 38: No (direct benefit) / Para 39: Yes (direct benefit)
+        # Para 41: No (routine) / Para 42: Yes (routine)
+        # Para 44: No (greater dose) / Para 45: Yes (greater dose)
         ionizing_radiation = flat_data.get('study.ionizing_radiation', '')
-        if ionizing_radiation:
-            # Para 35: "No: Radiation Safety Committee..." or Para 36: "Yes: Will participants..."
-            if ionizing_radiation == 'no':
-                DocumentService._check_checkbox_by_text(doc, 'No: Radiation Safety Committee', True)
-            else:
-                DocumentService._check_checkbox_by_text(doc, 'Yes: Will participants in this study', True)
-
-        # Handle nested radiation questions if yes
         radiation_direct_benefit = flat_data.get('study.radiation_direct_benefit', '')
-        if ionizing_radiation == 'yes' and radiation_direct_benefit:
-            if radiation_direct_benefit == 'no':
-                # Check "No: RSC review REQUIRED" (first occurrence after direct benefit question)
-                for para in doc.paragraphs:
-                    if 'direct medical benefits' in para.text.lower():
-                        # Find next No checkbox
-                        found = False
-                        for next_para in doc.paragraphs[doc.paragraphs.index(para)+1:]:
-                            if 'no: rsc review required' in next_para.text.lower():
-                                DocumentService._check_legacy_checkbox(next_para, True)
-                                found = True
-                                break
-                            if found:
-                                break
-                        break
+        radiation_routine = flat_data.get('study.radiation_routine', '')
+        radiation_greater_dose = flat_data.get('study.radiation_greater_dose', '')
+
+        if ionizing_radiation:
+            # Main question: Para 35 (No) or Para 36 (Yes)
+            if ionizing_radiation == 'no':
+                # Para 35: "No: Radiation Safety Committee (RSC) review not required"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[35], True)
             else:
-                DocumentService._check_checkbox_by_text(doc, 'Yes: Is the proposed use', True)
+                # Para 36: "Yes: Will participants in this study receive direct medical benefits?"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[36], True)
+
+        if ionizing_radiation == 'yes' and radiation_direct_benefit:
+            # Direct benefit question: Para 38 (No) or Para 39 (Yes)
+            if radiation_direct_benefit == 'no':
+                # Para 38: "No: RSC review REQUIRED"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[38], True)
+            else:
+                # Para 39: "Yes: Is the proposed use..."
+                DocumentService._check_legacy_checkbox(doc.paragraphs[39], True)
+
+        if ionizing_radiation == 'yes' and radiation_direct_benefit == 'yes' and radiation_routine:
+            # Routine question: Para 41 (No) or Para 42 (Yes)
+            if radiation_routine == 'no':
+                # Para 41: "No: RSC review REQUIRED"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[41], True)
+            else:
+                # Para 42: "Yes: Will subjects participating..."
+                DocumentService._check_legacy_checkbox(doc.paragraphs[42], True)
+
+        if ionizing_radiation == 'yes' and radiation_direct_benefit == 'yes' and radiation_routine == 'yes' and radiation_greater_dose:
+            # Greater dose question: Para 44 (No) or Para 45 (Yes)
+            if radiation_greater_dose == 'no':
+                # Para 44: "No: RSC review not required"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[44], True)
+            else:
+                # Para 45: "Yes: RSC review REQUIRED"
+                DocumentService._check_legacy_checkbox(doc.paragraphs[45], True)
 
         # Handle Section V.E - SCRO (paragraph 48)
         scro_required = flat_data.get('study.scro_required', '')
